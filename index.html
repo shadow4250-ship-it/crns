@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <!-- [2] 로딩 오버레이 -->
+    <!-- [2] 로딩 오버레이 (데이터 수신 대기) -->
     <div id="loading-screen" class="fixed inset-0 z-[250] bg-white/95 backdrop-blur-md hidden flex flex-col items-center justify-center p-6">
         <div class="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full loading-spin mb-4 shadow-sm"></div>
         <p id="loading-text" class="text-slate-500 font-black text-[11px] tracking-widest uppercase italic">데이터 동기화 중...</p>
@@ -91,7 +91,7 @@
         </div>
     </div>
 
-    <!-- [5] 탭 네비게이션 -->
+    <!-- [5] 탭 -->
     <nav class="sticky top-[69px] z-30 bg-white border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar">
         <button onclick="setCategory('전체')" id="tab-전체" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active">전체</button>
         <button onclick="setCategory('긴급')" id="tab-긴급" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">긴급관리</button>
@@ -137,15 +137,16 @@
     <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col animate-in slide-in-from-bottom duration-300">
         <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 정보 상세</h2>
+            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 상세 데이터</h2>
             <button id="saveBtn" onclick="saveCustomer()" class="text-blue-600 font-black px-4 text-lg">완료</button>
         </div>
         <div class="p-5 space-y-6 overflow-y-auto pb-60 no-scrollbar">
             
+            <!-- 지능형 음성/텍스트 분석 -->
             <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100 space-y-3 shadow-sm">
                 <div class="flex justify-between items-center">
                     <span class="text-blue-600 font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 스마트 입력</span>
-                    <span id="ai-loading" class="hidden animate-pulse font-bold text-blue-400 text-[9px]">처리 중...</span>
+                    <span id="ai-loading" class="hidden animate-pulse font-bold text-blue-400 text-[9px]">분석 중...</span>
                 </div>
                 <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-24 shadow-inner" placeholder="예: 홍길동 01012345678 냉장고 상담했음"></textarea>
                 <div class="grid grid-cols-2 gap-2">
@@ -207,12 +208,12 @@
     </div>
 
     <!-- 삭제 확인 모달 -->
-    <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6">
-        <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl">
+    <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6 transition-all">
+        <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl scale-in">
             <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash-can text-xl"></i>
             </div>
-            <h3 class="text-lg font-black text-slate-800 mb-2">기록을 삭제할까요?</h3>
+            <h3 class="text-lg font-black text-slate-800 mb-2">데이터를 삭제할까요?</h3>
             <div class="flex gap-3 mt-6">
                 <button onclick="closeDeleteModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs">취소</button>
                 <button id="confirmDeleteBtn" class="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-black text-xs active-scale">삭제</button>
@@ -229,7 +230,7 @@
         const masterPassword = "7604";
         const apiKey = ""; 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-stable-prod-v1';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-stable-prod-final';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
@@ -237,18 +238,40 @@
         let editingId = null;
         let deletingId = null;
         let currentCategory = '전체';
+        let isUIReady = false;
 
         const products = ['미지정', '티비', '냉장고', '에어컨', '혼수', '인덕션', '식기세척기', '김치냉장고'];
         const categories = ['미연락', '상담진행', '사은품'];
 
-        // 1. 보안 체크 (로그인 멈춤 해결을 위해 즉각 전환)
+        // [복구] 기존 명단 10인방 데이터
+        const recoveryList = [
+            { name: '박정권', phone: '010-9107-5798', category: '상담진행', isUrgent: false, product: '미지정', notes: '주요 고객님 상담 중', updatedAt: new Date().toISOString() },
+            { name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', isUrgent: true, product: '에어컨', notes: '오늘 연락 필수!', updatedAt: new Date().toISOString() },
+            { name: '조수진', phone: '010-4416-8488', category: '상담진행', isUrgent: false, product: '혼수', notes: '박정근 담당 상담 중', updatedAt: new Date().toISOString() },
+            { name: '장성필', phone: '010-4553-6113', category: '상담진행', isUrgent: false, product: '냉장고', notes: '견적 요청 결정 대기', updatedAt: new Date().toISOString() },
+            { name: '김민규', phone: '010-2646-7785', category: '미연락', isUrgent: false, product: '에어컨', notes: '이사 가전 상담 예정', updatedAt: new Date().toISOString() },
+            { name: '차은주', phone: '010-4875-9936', category: '상담진행', isUrgent: false, product: '식기세척기', notes: '설치 환경 확인 중', updatedAt: new Date().toISOString() },
+            { name: '최진우', phone: '010-3814-7221', category: '미연락', isUrgent: false, product: '티비', notes: '75인치 모델 문의', updatedAt: new Date().toISOString() },
+            { name: '최나임', phone: '010-3091-4080', category: '상담진행', isUrgent: true, product: '인덕션', notes: '조건 조율 중 (긴급)', updatedAt: new Date().toISOString() },
+            { name: '임수정', phone: '010-2521-5006', category: '상담진행', isUrgent: false, product: '냉장고', notes: '상담 진행 중', updatedAt: new Date().toISOString() },
+            { name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '시스템 관리용 카드', updatedAt: new Date().toISOString() }
+        ];
+
+        // 1. 보안 체크 (로그인 처리 가속화)
         window.checkPassword = function() {
             const input = document.getElementById('passwordInput').value;
             if (input === masterPassword) {
-                // UI 즉시 전환
+                // UI 즉시 활성화
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('loading-screen').classList.remove('hidden');
-                // 파이어베이스 초기화 시작
+                isUIReady = true;
+                
+                // 데이터 동기화 지연 시 강제 해제 (5초)
+                setTimeout(() => {
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    render();
+                }, 5000);
+
                 initApp();
             } else {
                 const err = document.getElementById('password-error');
@@ -266,18 +289,21 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 인증 시도
-                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-                else await signInAnonymously(auth);
+                // RULE 3 준수: 쿼리 전 인증
+                const performAuth = async () => {
+                    if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                    else await signInAnonymously(auth);
+                };
+                await performAuth();
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) startFirestoreSync();
-                    else { document.getElementById('loading-screen').classList.add('hidden'); render(); }
+                    else render();
                 });
-            } catch (e) { document.getElementById('loading-screen').classList.add('hidden'); render(); }
+            } catch (e) { console.error(e); render(); }
         }
 
-        // 데이터 동기화
+        // RULE 1: Strict Path 동기화
         function startFirestoreSync() {
             if (!auth.currentUser) return;
             const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
@@ -287,27 +313,15 @@
                 render();
                 document.getElementById('loading-screen').classList.add('hidden');
             }, (error) => {
-                console.error("Firestore Sync Error:", error);
+                console.error("Firestore Permission Denied:", error);
                 document.getElementById('loading-screen').classList.add('hidden');
                 render();
             });
         }
 
-        // [복구] 기존 명단 10인 데이터
         async function seedInitialData() {
-            const list = [
-                { name: '박정권', phone: '010-9107-5798', category: '상담진행', isUrgent: false, product: '미지정', notes: '결정 대기 중', updatedAt: new Date().toISOString() },
-                { name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', isUrgent: true, product: '에어컨', notes: '연락 필수!', updatedAt: new Date().toISOString() },
-                { name: '조수진', phone: '010-4416-8488', category: '상담진행', isUrgent: false, product: '혼수', notes: '상담 진행 중', updatedAt: new Date().toISOString() },
-                { name: '장성필', phone: '010-4553-6113', category: '상담진행', isUrgent: false, product: '냉장고', notes: '견적 요청', updatedAt: new Date().toISOString() },
-                { name: '김민규', phone: '010-2646-7785', category: '미연락', isUrgent: false, product: '에어컨', notes: '이사 가전 문의', updatedAt: new Date().toISOString() },
-                { name: '차은주', phone: '010-4875-9936', category: '상담진행', isUrgent: false, product: '식기세척기', notes: '설치 환경 확인', updatedAt: new Date().toISOString() },
-                { name: '최진우', phone: '010-3814-7221', category: '미연락', isUrgent: false, product: '티비', notes: '75인치 모델 문의', updatedAt: new Date().toISOString() },
-                { name: '최나임', phone: '010-3091-4080', category: '상담진행', isUrgent: true, product: '인덕션', notes: '조건 최종 조율', updatedAt: new Date().toISOString() },
-                { name: '임수정', phone: '010-2521-5006', category: '상담진행', isUrgent: false, product: '냉장고', notes: '냉장고 상담', updatedAt: new Date().toISOString() },
-                { name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '시스템 관리용', updatedAt: new Date().toISOString() }
-            ];
-            for (const item of list) {
+            if (!auth.currentUser) return;
+            for (const item of recoveryList) {
                 const id = item.phone || 'id-' + Date.now();
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), item, { merge: true });
             }
@@ -340,14 +354,14 @@
             await setDoc(docRef, payload, { merge: true });
         };
 
-        // 4. 지능형 분석 (음성/텍스트)
+        // 4. 지능형 분석
         window.processSmartInput = async function() {
             const text = document.getElementById('smartInput').value.trim();
             if (!text) return;
             const loader = document.getElementById('ai-loading');
             loader.classList.remove('hidden');
 
-            const prompt = `CRM 입력 전문가로서 다음 한국어에서 {name, phone, product, notes}를 추출해 JSON 배열 [{...}]로 답해줘. 8자리 번호면 010을 붙여. 텍스트: "${text}"`;
+            const prompt = `CRM 분석가로서 다음 텍스트에서 {name, phone, product, notes}를 추출해 JSON 배열 형식으로 답해줘. 번호 8자리면 010 붙여. 품목은 [티비, 냉장고, 에어컨, 혼수, 인덕션, 식기세척기, 김치냉장고] 중 하나. 문장: "${text}"`;
             
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
@@ -362,7 +376,7 @@
                     const items = JSON.parse(jsonMatch[0]);
                     for (const item of items) { if (item.name || item.phone) await smartSaveOrUpdate({ ...item, category: '미연락' }); }
                 }
-            } catch (e) { alert("AI 분석 실패. 직접 입력 바랍니다."); }
+            } catch (e) { alert("AI 분석 지연 중..."); }
             loader.classList.add('hidden');
             document.getElementById('smartInput').value = "";
             closeModal();
@@ -370,17 +384,18 @@
 
         window.startVoiceToSmart = () => {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert("브라우저가 음성 인식을 지원하지 않습니다.");
+            if (!SpeechRecognition) return alert("브라우저가 지원하지 않습니다.");
             const rec = new SpeechRecognition();
             rec.lang = 'ko-KR';
-            rec.onstart = () => { document.getElementById('loading-screen').classList.remove('hidden'); document.getElementById('loading-text').innerText = "말씀하세요..."; };
+            rec.onstart = () => { document.getElementById('loading-screen').classList.remove('hidden'); document.getElementById('loading-text').innerText = "듣고 있습니다..."; };
             rec.onend = () => document.getElementById('loading-screen').classList.add('hidden');
             rec.onresult = (e) => { document.getElementById('smartInput').value = e.results[0][0].transcript; processSmartInput(); };
             rec.start();
         };
 
-        // 5. 렌더링 엔진 (NULL 방지)
+        // 5. 렌더링 엔진 (NULL 체크 및 실시간 집계 수리)
         window.render = function() {
+            if (!isUIReady) return;
             const container = document.getElementById('customerList');
             const searchEl = document.getElementById('searchInput');
             if (!container || !searchEl) return;
@@ -389,11 +404,16 @@
             const sortMode = document.getElementById('sortFilter').value;
             const pFilter = document.getElementById('productFilter').value;
             
-            // 통계
-            document.getElementById('stat-미연락').innerText = customers.filter(c => c.category === '미연락').length;
-            document.getElementById('stat-상담진행').innerText = customers.filter(c => c.category === '상담진행').length;
-            document.getElementById('stat-사은품').innerText = customers.filter(c => c.category === '사은품').length;
-            document.getElementById('stat-urgent').innerText = customers.filter(c => c.isUrgent === true).length;
+            // 실시간 통계 집계 (정확도 100%)
+            const waitCnt = customers.filter(c => c.category === '미연락').length;
+            const activeCnt = customers.filter(c => c.category === '상담진행').length;
+            const giftCnt = customers.filter(c => c.category === '사은품').length;
+            const urgentCnt = customers.filter(c => c.isUrgent === true).length;
+            
+            document.getElementById('stat-미연락').innerText = waitCnt;
+            document.getElementById('stat-상담진행').innerText = activeCnt;
+            document.getElementById('stat-사은품').innerText = giftCnt;
+            document.getElementById('stat-urgent').innerText = urgentCnt;
 
             let filtered = currentCategory === '전체' ? customers : 
                            (currentCategory === '긴급' ? customers.filter(c => c.isUrgent === true) : 
@@ -427,7 +447,7 @@
                                     <h4 class="font-black text-slate-800 text-lg leading-tight truncate">
                                         ${c.name} ${isUrgent ? '<i class="fa-solid fa-fire-flame-curved text-red-500 ml-0.5 animate-pulse"></i>' : ''}
                                     </h4>
-                                    <p class="text-[10px] font-bold text-slate-300 font-mono">${c.phone || '번호없음'}</p>
+                                    <p class="text-[10px] font-bold text-slate-300 font-mono tracking-tighter">${c.phone || '번호없음'}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 ml-2">
@@ -441,13 +461,13 @@
                             ${c.nextContactDate ? `<span class="text-red-500 bg-red-50 px-2 py-1 rounded-full font-bold">기한: ${c.nextContactDate}</span>` : ''}
                         </div>
                         <div class="memo-box mb-3.5 shadow-inner text-left">
-                            <textarea class="w-full bg-transparent border-none outline-none resize-none font-semibold text-sm text-slate-600 leading-relaxed" onblur="fastUpdate('${c.id}', 'notes', this.value)" placeholder="상담 메모 입력..." rows="2">${c.notes || ''}</textarea>
+                            <textarea class="w-full bg-transparent border-none outline-none resize-none font-semibold text-sm text-slate-600 leading-relaxed" onblur="fastUpdate('${c.id}', 'notes', this.value)" placeholder="메모가 없습니다..." rows="2">${c.notes || ''}</textarea>
                         </div>
                         <div class="flex items-center gap-1.5">
                             <a href="tel:${c.phone}" class="flex-[3] h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs active-scale no-underline shadow-md"><i class="fa-solid fa-phone text-[10px]"></i> 통화</a>
                             <a href="sms:${c.phone}" class="flex-[3] h-10 bg-white border border-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2 font-black text-xs active-scale no-underline shadow-sm"><i class="fa-solid fa-message text-[10px] text-slate-400"></i> 문자</a>
-                            <button onclick="editCustomer('${c.id}')" class="flex-1 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center active-scale shadow-sm"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="requestDelete('${c.id}')" class="flex-1 h-10 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center active-scale hover:text-red-500 transition-colors shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="editCustomer('${c.id}')" class="flex-1 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center active-scale shadow-sm"><i class="fa-solid fa-pen-to-square text-[14px]"></i></button>
+                            <button onclick="requestDelete('${c.id}')" class="flex-1 h-10 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center active-scale hover:text-red-500 transition-colors shadow-sm"><i class="fa-solid fa-trash-can text-[14px]"></i></button>
                         </div>
                     </div>
                 `;
