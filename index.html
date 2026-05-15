@@ -40,27 +40,26 @@
         <div class="w-full max-w-[260px] text-center space-y-10">
             <div class="space-y-1">
                 <h1 class="text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">CRM</h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Simple is Best</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Fast Access</p>
             </div>
             <div class="space-y-4">
                 <input type="password" id="passwordInput" inputmode="numeric" autofocus maxlength="4"
-                    onkeydown="if(event.key==='Enter') window.checkPassword()"
                     class="w-full bg-slate-50 border-2 border-slate-100 rounded-[28px] py-6 text-center text-4xl font-black outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner" 
                     placeholder="••••">
-                <button onclick="window.checkPassword()" 
+                <button id="loginBtn"
                     class="w-full bg-slate-900 text-white py-5 rounded-[28px] font-black active-scale shadow-2xl text-lg uppercase tracking-wider">접속하기</button>
             </div>
             <p id="password-error" class="hidden text-red-500 text-xs font-bold animate-pulse">암호가 올바르지 않습니다.</p>
         </div>
     </div>
 
-    <!-- [2] 동기화 로딩 -->
-    <div id="loading-screen" class="fixed inset-0 z-[250] bg-white/95 backdrop-blur-md hidden flex flex-col items-center justify-center p-6 transition-opacity">
+    <!-- [2] 동기화 로딩 (앱 진입 후 배경 동기화 시에만) -->
+    <div id="sync-loading" class="fixed inset-0 z-[250] bg-white/95 backdrop-blur-md hidden flex flex-col items-center justify-center p-6 transition-opacity">
         <div class="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full loading-spin mb-4 shadow-sm"></div>
-        <p id="loading-text" class="text-slate-500 font-black text-[11px] tracking-widest uppercase italic">데이터 동기화 중...</p>
+        <p class="text-slate-500 font-black text-[11px] tracking-widest uppercase italic">데이터 동기화 중...</p>
     </div>
 
-    <!-- [3] 메인 UI 영역 -->
+    <!-- [3] 메인 UI 영역 (비밀번호 입력 전까지 히든) -->
     <div id="main-container" class="hidden">
         <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 px-5 flex justify-between items-center shadow-sm">
             <h1 class="text-2xl font-black tracking-tighter uppercase leading-none italic">CRM</h1>
@@ -73,21 +72,21 @@
 
         <!-- 파이프라인 통계 -->
         <div class="px-4 pt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
                 <p class="text-[7px] font-black text-red-500 uppercase tracking-tighter">Emergency</p>
-                <p id="stat-urgent" class="text-lg font-black text-slate-800">0</p>
+                <p id="stat-urgent" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
                 <p class="text-[7px] font-black text-orange-500 uppercase tracking-tighter">Wait</p>
-                <p id="stat-미연락" class="text-lg font-black text-slate-800">0</p>
+                <p id="stat-미연락" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
                 <p class="text-[7px] font-black text-blue-500 uppercase tracking-tighter">Consult</p>
-                <p id="stat-상담진행" class="text-lg font-black text-slate-800">0</p>
+                <p id="stat-상담진행" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[70px] text-center shadow-sm">
                 <p class="text-[7px] font-black text-green-500 uppercase tracking-tighter">Gift</p>
-                <p id="stat-사은품" class="text-lg font-black text-slate-800">0</p>
+                <p id="stat-사은품" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
         </div>
 
@@ -107,12 +106,14 @@
             </div>
             
             <div class="flex items-center justify-between px-1">
-                <select id="sortFilter" onchange="window.render()" class="bg-white border border-slate-200 rounded-full px-3 py-1.5 text-[10px] font-black text-slate-600 outline-none shadow-sm">
-                    <option value="update">최신 수정순</option>
-                    <option value="product">품목별 정렬</option>
-                    <option value="name">이름 가나다순</option>
-                </select>
-                <span id="totalBadge" class="text-[9px] font-black text-slate-400 bg-white border border-slate-100 px-3 py-1.5 rounded-full shadow-inner ml-2">0 명</span>
+                <div class="flex gap-1.5 overflow-x-auto no-scrollbar">
+                    <select id="sortFilter" onchange="window.render()" class="bg-white border border-slate-200 rounded-full px-3 py-1.5 text-[10px] font-black text-slate-600 outline-none shadow-sm min-w-[100px]">
+                        <option value="update">최신 수정순</option>
+                        <option value="product">품목별 정렬</option>
+                        <option value="name">이름 가나다순</option>
+                    </select>
+                </div>
+                <span id="totalBadge" class="text-[9px] font-black text-slate-400 bg-white border border-slate-100 px-3 py-1.5 rounded-full shadow-inner ml-2 flex-none">0 명</span>
             </div>
 
             <div id="customerList" class="space-y-3"></div>
@@ -123,14 +124,14 @@
     <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col animate-in slide-in-from-bottom duration-300">
         <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="window.closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 정보</h2>
+            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 데이터 상세</h2>
             <button id="saveBtn" onclick="window.saveCustomer()" class="text-blue-600 font-black px-4 text-lg">완료</button>
         </div>
         <div class="p-5 space-y-6 overflow-y-auto pb-60 no-scrollbar text-left">
             <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100 space-y-3 shadow-sm">
                 <div class="flex justify-between items-center">
-                    <span class="text-blue-600 font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 스마트 등록</span>
-                    <span id="ai-loading" class="hidden animate-pulse text-blue-400 text-[9px] font-bold">분석 중...</span>
+                    <span class="text-blue-600 font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 스마트 입력</span>
+                    <span id="ai-loading" class="hidden animate-pulse font-bold text-blue-400 text-[9px]">분석 중...</span>
                 </div>
                 <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-24 shadow-inner" placeholder="예: 홍길동 01012345678 에어컨 상담했음"></textarea>
                 <div class="grid grid-cols-2 gap-2">
@@ -147,7 +148,7 @@
                     <input id="formName" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:bg-white shadow-sm">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">단계</label>
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">업무 단계</label>
                     <select id="formCategory" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none bg-white shadow-sm">
                         <option value="미연락">미연락</option>
                         <option value="상담진행">상담진행</option>
@@ -192,7 +193,7 @@
             <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash-can text-xl"></i>
             </div>
-            <h3 class="text-lg font-black text-slate-800 mb-2">기록을 삭제할까요?</h3>
+            <h3 class="text-lg font-black text-slate-800 mb-2">데이터를 삭제할까요?</h3>
             <div class="flex gap-3 mt-6">
                 <button onclick="window.closeDeleteModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs">취소</button>
                 <button id="confirmDeleteBtn" class="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-black text-xs active-scale">삭제</button>
@@ -205,11 +206,11 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ⚙️ 환경 및 보안 설정
+        // ⚙️ 설정 및 고정 명단
         const masterPassword = "7604";
         const apiKey = ""; 
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-master-final';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-master-final-v77';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
@@ -222,7 +223,6 @@
         const products = ['미지정', '티비', '냉장고', '에어컨', '혼수', '인덕션', '식기세척기', '김치냉장고'];
         const categories = ['미연락', '상담진행', '사은품'];
 
-        // [복구] 기존 명단 10인 데이터
         const recoveryList = [
             { name: '박정권', phone: '010-9107-5798', category: '상담진행', isUrgent: false, product: '미지정', notes: '주요 고객님 상담 중', updatedAt: new Date().toISOString() },
             { name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', isUrgent: true, product: '에어컨', notes: '오늘 연락 필수!', updatedAt: new Date().toISOString() },
@@ -236,17 +236,16 @@
             { name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '시스템 관리용 카드', updatedAt: new Date().toISOString() }
         ];
 
-        // 1. 보안 체크 (로그인 반응 없음 해결: UI 선 전환)
+        // [핵심] 1. 보안 체크 및 즉시 화면 전환
         window.checkPassword = function() {
             const input = document.getElementById('passwordInput').value;
             if (input === masterPassword) {
-                // UI 즉시 개방
+                // UI 즉시 개방 (반응 없음 현상 해결)
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('main-container').classList.remove('hidden');
-                document.getElementById('loading-screen').classList.remove('hidden');
                 isAppReady = true;
                 
-                // 배경에서 파이어베이스 연결 시작
+                // 배경에서 데이터 동기화 시작
                 initApp();
             } else {
                 const err = document.getElementById('password-error');
@@ -256,14 +255,18 @@
             }
         };
 
-        // 2. 파이어베이스 초기화 (RULE 3 준수)
+        // 초기 바인딩 (엔터키 및 버튼)
+        document.getElementById('loginBtn').onclick = window.checkPassword;
+        document.getElementById('passwordInput').onkeydown = (e) => { if(e.key === 'Enter') window.checkPassword(); };
+
+        // 2. 파이어베이스 초기화 (인증 후 데이터 로드)
         async function initApp() {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // RULE 3 준수: 인증 후 DB 작업
+                // RULE 3 준수: 인증을 먼저 실행
                 if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
                 else await signInAnonymously(auth);
 
@@ -271,25 +274,20 @@
                     if (user) startFirestoreSync();
                     else window.render();
                 });
-            } catch (e) { 
-                console.error("Firebase Auth Error:", e);
-                document.getElementById('loading-screen').classList.add('hidden');
-                window.render(); 
-            }
+            } catch (e) { console.error("Auth Error:", e); window.render(); }
         }
 
-        // RULE 1: Strict Paths 동기화
+        // 3. 실시간 데이터 동기화
         function startFirestoreSync() {
             if (!auth.currentUser) return;
             const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+            
             onSnapshot(ref, (snapshot) => {
                 customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 if (customers.length === 0) seedInitialData();
                 window.render();
-                document.getElementById('loading-screen').classList.add('hidden');
             }, (error) => {
-                console.error("Firestore Sync Error:", error);
-                document.getElementById('loading-screen').classList.add('hidden');
+                console.error("Firestore Error:", error);
                 window.render();
             });
         }
@@ -302,7 +300,7 @@
             }
         }
 
-        // 3. 지능형 저장
+        // 4. 지능형 저장 및 분류
         window.smartSaveOrUpdate = async (data) => {
             if (!auth.currentUser) return;
             const phone = (data.phone || '').toString().replace(/[^0-9]/g, '');
@@ -324,11 +322,9 @@
                 isUrgent: data.isUrgent !== undefined ? data.isUrgent : (existing ? existing.isUrgent : false),
                 updatedAt: new Date().toISOString()
             };
-
             await setDoc(docRef, payload, { merge: true });
         };
 
-        // 4. 지능형 분석
         window.processSmartInput = async function() {
             const textEl = document.getElementById('smartInput');
             const text = textEl ? textEl.value.trim() : "";
@@ -336,7 +332,7 @@
             const loader = document.getElementById('ai-loading');
             if(loader) loader.classList.remove('hidden');
 
-            const prompt = `CRM 입력 전문가로서 다음 한국어에서 {name, phone, product, notes}를 추출해 JSON 배열 [{...}]로 답해줘. 8자리 번호면 010을 붙여. 품목은 [티비, 냉장고, 에어컨, 혼수, 인덕션, 식기세척기, 김치냉장고] 중 하나. 텍스트: "${text}"`;
+            const prompt = `CRM 분석가로서 다음 문장에서 {name, phone, product, notes}를 추출해 JSON 배열 [{...}]로 답해줘. 8자리 번호면 010을 붙여. 텍스트: "${text}"`;
             
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
@@ -351,7 +347,7 @@
                     const items = JSON.parse(jsonMatch[0]);
                     for (const item of items) { if (item.name || item.phone) await window.smartSaveOrUpdate({ ...item, category: '미연락' }); }
                 }
-            } catch (e) { alert("AI 분석 실패. 직접 입력 바랍니다."); }
+            } catch (e) { alert("AI 분석 실패. 직접 입력을 이용해 주세요."); }
             if(loader) loader.classList.add('hidden');
             if(textEl) textEl.value = "";
             window.closeModal();
@@ -359,7 +355,7 @@
 
         window.startVoiceToSmart = () => {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert("브라우저가 지원하지 않습니다.");
+            if (!SpeechRecognition) return alert("음성 인식이 지원되지 않습니다.");
             const rec = new SpeechRecognition();
             rec.lang = 'ko-KR';
             rec.onresult = (e) => { 
@@ -370,7 +366,7 @@
             rec.start();
         };
 
-        // 5. 렌더링 엔진 (NULL 체크 및 실시간 집계)
+        // 5. 렌더링 엔진 (에러 방어 및 실시간 통계)
         window.render = function() {
             if (!isAppReady) return;
             const container = document.getElementById('customerList');
@@ -380,7 +376,7 @@
             const search = searchEl.value.toLowerCase();
             const sortMode = document.getElementById('sortFilter').value;
             
-            // 실시간 통계 집계
+            // 실시간 통계 계산
             document.getElementById('stat-미연락').innerText = customers.filter(c => c.category === '미연락').length;
             document.getElementById('stat-상담진행').innerText = customers.filter(c => c.category === '상담진행').length;
             document.getElementById('stat-사은품').innerText = customers.filter(c => c.category === '사은품').length;
@@ -429,16 +425,16 @@
                         </div>
                         <div class="flex gap-2">
                             <a href="tel:${c.phone}" class="flex-1 h-11 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs no-underline shadow-md active:scale-95 transition-all"><i class="fa-solid fa-phone"></i> 통화</a>
-                            <a href="sms:${c.phone}" class="flex-1 h-11 bg-white border border-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2 font-black text-xs no-underline active:scale-95 transition-all"><i class="fa-solid fa-message text-slate-400"></i> 문자</a>
+                            <a href="sms:${c.phone}" class="flex-1 h-11 bg-white border border-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2 font-black text-xs active-scale-95 transition-all shadow-sm"><i class="fa-solid fa-message text-slate-400"></i> 문자</a>
                             <button onclick="window.editCustomer('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center active:scale-95"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="window.requestDelete('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center active:scale-95 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="window.requestDelete('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center active-scale-95 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
                 `;
             });
         };
 
-        // 6. UI 제어 핸들러
+        // 6. UI 핸들러
         window.fastUpdate = async (id, field, value) => {
             if (!auth.currentUser) return;
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { [field]: value, updatedAt: new Date().toISOString() }, { merge: true });
