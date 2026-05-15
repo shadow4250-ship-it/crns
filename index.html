@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <!-- [2] 로딩 오버레이 (데이터 수신 대기) -->
+    <!-- [2] 로딩 오버레이 -->
     <div id="loading-screen" class="fixed inset-0 z-[250] bg-white/95 backdrop-blur-md hidden flex flex-col items-center justify-center p-6">
         <div class="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full loading-spin mb-4 shadow-sm"></div>
         <p id="loading-text" class="text-slate-500 font-black text-[11px] tracking-widest uppercase italic">데이터 동기화 중...</p>
@@ -133,7 +133,7 @@
         <div id="customerList" class="space-y-3"></div>
     </main>
 
-    <!-- [7] 입력 모달 -->
+    <!-- [7] 모달 -->
     <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col animate-in slide-in-from-bottom duration-300">
         <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
@@ -146,9 +146,9 @@
             <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100 space-y-3 shadow-sm">
                 <div class="flex justify-between items-center">
                     <span class="text-blue-600 font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 스마트 입력</span>
-                    <span id="ai-loading" class="hidden animate-pulse font-bold text-blue-400 text-[9px]">분석 중...</span>
+                    <span id="ai-loading" class="hidden animate-pulse font-bold text-blue-400 text-[9px]">데이터 추출 중...</span>
                 </div>
-                <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-24 shadow-inner" placeholder="예: 홍길동 01012345678 냉장고 상담했음"></textarea>
+                <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-24 shadow-inner" placeholder="예: 홍길동 01012345678 에어컨 상담했음"></textarea>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="startVoiceToSmart()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3.5 text-xs font-black active-scale flex items-center justify-center gap-2 shadow-sm">
                         <i class="fa-solid fa-microphone"></i> 음성 자동 분류
@@ -163,7 +163,7 @@
                     <input id="formName" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:bg-white shadow-sm">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">단계</label>
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">업무 단계</label>
                     <select id="formCategory" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none bg-white shadow-sm">
                         <option value="미연락">미연락</option>
                         <option value="상담진행">상담진행</option>
@@ -226,11 +226,11 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 환경 변수 설정
+        // ⚙️ 보안 및 채널 설정
         const masterPassword = "7604";
         const apiKey = ""; 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-stable-prod-final';
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-stable-prod-final-v3';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
@@ -238,7 +238,7 @@
         let editingId = null;
         let deletingId = null;
         let currentCategory = '전체';
-        let isUIReady = false;
+        let isAppReady = false;
 
         const products = ['미지정', '티비', '냉장고', '에어컨', '혼수', '인덕션', '식기세척기', '김치냉장고'];
         const categories = ['미연락', '상담진행', '사은품'];
@@ -257,21 +257,16 @@
             { name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '시스템 관리용 카드', updatedAt: new Date().toISOString() }
         ];
 
-        // 1. 보안 체크 (로그인 처리 가속화)
+        // 1. 보안 체크 (로그인 멈춤 해결을 위해 순서 변경)
         window.checkPassword = function() {
             const input = document.getElementById('passwordInput').value;
             if (input === masterPassword) {
-                // UI 즉시 활성화
+                // UI 즉시 전환
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('loading-screen').classList.remove('hidden');
-                isUIReady = true;
+                isAppReady = true;
                 
-                // 데이터 동기화 지연 시 강제 해제 (5초)
-                setTimeout(() => {
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    render();
-                }, 5000);
-
+                // 파이어베이스 초기화 시작
                 initApp();
             } else {
                 const err = document.getElementById('password-error');
@@ -284,29 +279,32 @@
         // 2. 파이어베이스 초기화 (RULE 3 준수)
         async function initApp() {
             try {
-                if (!firebaseConfig.apiKey) { render(); return; }
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // RULE 3 준수: 쿼리 전 인증
-                const performAuth = async () => {
-                    if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-                    else await signInAnonymously(auth);
-                };
-                await performAuth();
+                // RULE 3: 쿼리 실행 전 반드시 인증
+                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                else await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, (user) => {
-                    if (user) startFirestoreSync();
-                    else render();
+                    if (user) {
+                        startFirestoreSync();
+                    } else {
+                        render(); // 인증 실패 시에도 기본 렌더링은 호출
+                    }
                 });
-            } catch (e) { console.error(e); render(); }
+            } catch (e) { 
+                console.error("Firebase Auth Error:", e);
+                document.getElementById('loading-screen').classList.add('hidden');
+            }
         }
 
-        // RULE 1: Strict Path 동기화
+        // RULE 1: Strict Paths 동기화
         function startFirestoreSync() {
             if (!auth.currentUser) return;
             const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+            
             onSnapshot(ref, (snapshot) => {
                 customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 if (customers.length === 0) seedInitialData();
@@ -327,11 +325,13 @@
             }
         }
 
-        // 3. 지능형 저장
+        // 3. 스마트 저장 (중복 덮어쓰기 로직)
         window.smartSaveOrUpdate = async (data) => {
             if (!auth.currentUser) return;
             const phone = (data.phone || '').toString().replace(/[^0-9]/g, '');
             const finalPhone = phone.length === 8 ? '010' + phone : phone;
+            
+            // 번호를 고유 ID로 활용하여 덮어쓰기 및 병합 보장
             const targetId = editingId || (finalPhone ? finalPhone : 'id-' + Date.now());
             
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', targetId);
@@ -354,14 +354,14 @@
             await setDoc(docRef, payload, { merge: true });
         };
 
-        // 4. 지능형 분석
+        // 4. 지능형 분류 및 음성 인식
         window.processSmartInput = async function() {
             const text = document.getElementById('smartInput').value.trim();
             if (!text) return;
             const loader = document.getElementById('ai-loading');
             loader.classList.remove('hidden');
 
-            const prompt = `CRM 분석가로서 다음 텍스트에서 {name, phone, product, notes}를 추출해 JSON 배열 형식으로 답해줘. 번호 8자리면 010 붙여. 품목은 [티비, 냉장고, 에어컨, 혼수, 인덕션, 식기세척기, 김치냉장고] 중 하나. 문장: "${text}"`;
+            const prompt = `다음 한국어에서 {name, phone, product, notes}를 추출해 JSON 배열 [{...}]로 답해줘. 8자리 번호면 010을 붙여. 품목은 [티비, 냉장고, 에어컨, 혼수, 인덕션, 식기세척기, 김치냉장고] 중 하나. 텍스트: "${text}"`;
             
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
@@ -376,7 +376,7 @@
                     const items = JSON.parse(jsonMatch[0]);
                     for (const item of items) { if (item.name || item.phone) await smartSaveOrUpdate({ ...item, category: '미연락' }); }
                 }
-            } catch (e) { alert("AI 분석 지연 중..."); }
+            } catch (e) { alert("AI 분석 실패. 직접 입력 바랍니다."); }
             loader.classList.add('hidden');
             document.getElementById('smartInput').value = "";
             closeModal();
@@ -393,27 +393,25 @@
             rec.start();
         };
 
-        // 5. 렌더링 엔진 (NULL 체크 및 실시간 집계 수리)
+        // 5. 렌더링 엔진 (NULL 방지 및 대시보드 통계)
         window.render = function() {
-            if (!isUIReady) return;
+            if (!isAppReady) return;
             const container = document.getElementById('customerList');
             const searchEl = document.getElementById('searchInput');
-            if (!container || !searchEl) return;
+            const sortEl = document.getElementById('sortFilter');
+            const pFilterEl = document.getElementById('productFilter');
+            
+            if (!container || !searchEl || !sortEl || !pFilterEl) return;
 
             const search = searchEl.value.toLowerCase();
-            const sortMode = document.getElementById('sortFilter').value;
-            const pFilter = document.getElementById('productFilter').value;
+            const sortMode = sortEl.value;
+            const pFilter = pFilterEl.value;
             
-            // 실시간 통계 집계 (정확도 100%)
-            const waitCnt = customers.filter(c => c.category === '미연락').length;
-            const activeCnt = customers.filter(c => c.category === '상담진행').length;
-            const giftCnt = customers.filter(c => c.category === '사은품').length;
-            const urgentCnt = customers.filter(c => c.isUrgent === true).length;
-            
-            document.getElementById('stat-미연락').innerText = waitCnt;
-            document.getElementById('stat-상담진행').innerText = activeCnt;
-            document.getElementById('stat-사은품').innerText = giftCnt;
-            document.getElementById('stat-urgent').innerText = urgentCnt;
+            // 통계 실시간 집계
+            document.getElementById('stat-미연락').innerText = customers.filter(c => c.category === '미연락').length;
+            document.getElementById('stat-상담진행').innerText = customers.filter(c => c.category === '상담진행').length;
+            document.getElementById('stat-사은품').innerText = customers.filter(c => c.category === '사은품').length;
+            document.getElementById('stat-urgent').innerText = customers.filter(c => c.isUrgent === true).length;
 
             let filtered = currentCategory === '전체' ? customers : 
                            (currentCategory === '긴급' ? customers.filter(c => c.isUrgent === true) : 
@@ -436,8 +434,8 @@
 
             filtered.forEach(c => {
                 const isUrgent = c.isUrgent === true;
-                const pOpts = products.map(p => `<option value="${p}" ${c.product === p ? 'selected' : ''}>${p}</option>`).join('');
                 const cOpts = categories.map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
+                const pOpts = products.map(p => `<option value="${p}" ${c.product === p ? 'selected' : ''}>${p}</option>`).join('');
 
                 container.innerHTML += `
                     <div class="bg-white p-4 rounded-[24px] border ${isUrgent ? 'urgent-card' : 'border-slate-100'} shadow-sm transition-all active:scale-[0.99]">
@@ -447,7 +445,7 @@
                                     <h4 class="font-black text-slate-800 text-lg leading-tight truncate">
                                         ${c.name} ${isUrgent ? '<i class="fa-solid fa-fire-flame-curved text-red-500 ml-0.5 animate-pulse"></i>' : ''}
                                     </h4>
-                                    <p class="text-[10px] font-bold text-slate-300 font-mono tracking-tighter">${c.phone || '번호없음'}</p>
+                                    <p class="text-[10px] font-bold text-slate-300 font-mono">${c.phone || '번호없음'}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 ml-2">
@@ -461,7 +459,7 @@
                             ${c.nextContactDate ? `<span class="text-red-500 bg-red-50 px-2 py-1 rounded-full font-bold">기한: ${c.nextContactDate}</span>` : ''}
                         </div>
                         <div class="memo-box mb-3.5 shadow-inner text-left">
-                            <textarea class="w-full bg-transparent border-none outline-none resize-none font-semibold text-sm text-slate-600 leading-relaxed" onblur="fastUpdate('${c.id}', 'notes', this.value)" placeholder="메모가 없습니다..." rows="2">${c.notes || ''}</textarea>
+                            <textarea class="w-full bg-transparent border-none outline-none resize-none font-semibold text-sm text-slate-600 leading-relaxed shadow-none" onblur="fastUpdate('${c.id}', 'notes', this.value)" placeholder="메모가 없습니다..." rows="2">${c.notes || ''}</textarea>
                         </div>
                         <div class="flex items-center gap-1.5">
                             <a href="tel:${c.phone}" class="flex-[3] h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs active-scale no-underline shadow-md"><i class="fa-solid fa-phone text-[10px]"></i> 통화</a>
