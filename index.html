@@ -1,0 +1,389 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot
+} from 'firebase/firestore';
+import { 
+  Phone, 
+  MessageSquare, 
+  Search, 
+  Plus, 
+  Edit3, 
+  Trash2, 
+  Mic, 
+  X, 
+  Bell, 
+  Calendar,
+  Loader2,
+  Database,
+  Smartphone,
+  Monitor
+} from 'lucide-react';
+
+// 1. Firebase 초기 설정
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 앱 ID를 시스템 환경 변수에서 가져오거나 고정값 사용 (RULE 1 준수)
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-fixed-v10';
+
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSyncing, setIsSyncing] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    phone: '', 
+    status: '잠재고객', 
+    notes: '', 
+    nextContactDate: '' 
+  });
+
+  // 2. 사라진 데이터 복구용 리스트
+  const recoveryList = [
+    { name: '에어컨 신규', phone: '010-2985-0955', status: '긴급', notes: '시스템에어컨 희망 / 5월 15일까지 연락 필수', updatedAt: new Date().toISOString() },
+    { name: '조수진', phone: '010-4416-8488', status: '잠재고객', notes: '혼수 가전 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
+    { name: '김민규', phone: '010-2646-7785', status: '잠재고객', notes: '이사 가전 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
+    { name: '최진우', phone: '010-3814-7221', status: '잠재고객', notes: '에어컨 단품 문의 / 박정근 담당', updatedAt: new Date().toISOString() },
+    { name: '장성필', phone: '010-4553-6113', status: '잠재고객', notes: '시스템 에어컨 전체 견적 / 박정근 담당', updatedAt: new Date().toISOString() },
+    { name: '임수정', phone: '010-2521-5006', status: '잠재고객', notes: '냉장고 교체 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
+    { name: '박정권', phone: '010-9107-5798', status: '잠재고객', notes: '주요 상담 고객님', updatedAt: new Date().toISOString() },
+    { name: '차은주', phone: '010-4875-9936', status: '잠재고객', notes: '5실 이상 상담 건', updatedAt: new Date().toISOString() },
+    { name: '최나임', phone: '010-3091-4080', status: '잠재고객', notes: '거실+안방1 구조 확인', updatedAt: new Date().toISOString() },
+    { name: '박정근', phone: '010-0000-0000', status: '기존고객', notes: '본인 기록용', updatedAt: new Date().toISOString() }
+  ];
+
+  // 3. 인증 처리 (RULE 3 - 인증을 먼저 완료해야 함)
+  useEffect(() => {
+    let unsubscribeAuth;
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+        // 인증 시도 후 상태 변경 리스너 등록
+        unsubscribeAuth = onAuthStateChanged(auth, (u) => {
+          if (u) {
+            setUser(u);
+          }
+        });
+      } catch (err) {
+        console.error("인증 실패:", err);
+      }
+    };
+    initAuth();
+    return () => unsubscribeAuth && unsubscribeAuth();
+  }, []);
+
+  // 4. 데이터 실시간 동기화 (RULE 1, 2, 3 준수)
+  useEffect(() => {
+    // 유저 인증이 완료되지 않았으면 쿼리를 실행하지 않음 (권한 오류 방지)
+    if (!user) return;
+
+    const customersRef = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+    
+    // onSnapshot 에러 콜백 추가 필수
+    const unsubscribe = onSnapshot(customersRef, async (snapshot) => {
+      if (snapshot.empty) {
+        // 데이터가 없으면 초기 명단 자동 복구 (비동기 처리)
+        for (const item of recoveryList) {
+          try {
+            await addDoc(customersRef, item);
+          } catch (e) {
+            console.error("데이터 복구 실패:", e);
+          }
+        }
+      } else {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // 정렬은 클라이언트에서 수행 (RULE 2)
+        setCustomers(data.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)));
+        setIsSyncing(false);
+      }
+    }, (error) => {
+      console.error("동기화 권한 에러 (onSnapshot):", error);
+      setIsSyncing(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // 오늘 연락 알림 계산
+  const todayAlerts = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return customers.filter(c => c.nextContactDate === today);
+  }, [customers]);
+
+  // 음성 인식 시작
+  const startVoice = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert("음성 인식이 지원되지 않는 브라우저입니다.");
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ko-KR';
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      setFormData(prev => ({ ...prev, notes: prev.notes + (prev.notes ? ' ' : '') + text }));
+    };
+    recognition.start();
+  };
+
+  // 데이터 저장
+  const handleSave = async () => {
+    if (!user) return alert("인증 대기 중입니다.");
+    if (!formData.name || !formData.phone) return alert("성함과 번호를 입력하세요.");
+    
+    try {
+      const data = { ...formData, updatedAt: new Date().toISOString() };
+      const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+      
+      if (editingId) {
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', editingId), data);
+      } else {
+        await addDoc(ref, data);
+      }
+      closeModal();
+    } catch (e) {
+      console.error("저장 실패:", e);
+      alert("데이터 저장 권한이 없습니다.");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!user || !window.confirm("정말 삭제할까요?")) return;
+    try {
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id));
+    } catch (e) {
+      console.error("삭제 실패:", e);
+    }
+  };
+
+  const openModal = (c = null) => {
+    if (c) {
+      setEditingId(c.id);
+      setFormData({ 
+        name: c.name, phone: c.phone, status: c.status, 
+        notes: c.notes || '', nextContactDate: c.nextContactDate || '' 
+      });
+    } else {
+      setEditingId(null);
+      setFormData({ name: '', phone: '', status: '잠재고객', notes: '', nextContactDate: '' });
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => setIsModalOpen(false);
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c => 
+      (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (c.phone || '').includes(searchTerm)
+    );
+  }, [customers, searchTerm]);
+
+  // 로딩 화면
+  if (!user || isSyncing) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-slate-50">
+        <Loader2 className="animate-spin text-slate-900 mb-4" size={40} />
+        <p className="text-slate-500 font-black text-xs uppercase tracking-widest">실시간 명단 복구 및 인증 중...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 select-none">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 p-5 flex justify-between items-center shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="bg-slate-900 text-white p-2.5 rounded-xl shadow-lg">
+            <Database size={20} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black tracking-tighter text-slate-800 italic uppercase leading-none">CRM</h1>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Park's Sync Mode</p>
+            </div>
+          </div>
+        </div>
+        <button onClick={() => openModal()} className="bg-slate-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all">
+          <Plus size={24} />
+        </button>
+      </header>
+
+      <main className="max-w-xl mx-auto p-4 space-y-4">
+        {/* 오늘 연락할 고객 알림 배너 */}
+        {todayAlerts.length > 0 && (
+          <div className="bg-slate-900 text-white rounded-[32px] p-6 shadow-2xl animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-3 mb-4">
+              <Bell className="text-yellow-400 animate-bounce" size={20} />
+              <p className="text-lg font-black italic">오늘 연락 기한 <span className="text-yellow-400">{todayAlerts.length}명</span></p>
+            </div>
+            <div className="space-y-2">
+              {todayAlerts.map(c => (
+                <div key={c.id} className="flex items-center justify-between bg-white/5 p-3 rounded-2xl border border-white/10">
+                  <span className="font-bold text-sm ml-2">{c.name}</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => window.location.href=`tel:${c.phone.replace(/[^0-9]/g,'')}`} className="p-2.5 bg-white/10 rounded-xl active:bg-white/20"><Phone size={14}/></button>
+                    <button onClick={() => window.location.href=`sms:${c.phone.replace(/[^0-9]/g,'')}`} className="p-2.5 bg-white/10 rounded-xl active:bg-white/20"><MessageSquare size={14}/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 검색바 */}
+        <div className="relative">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+          <input 
+            type="text" placeholder="이름 또는 번호 검색..." value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-14 pr-4 py-5 bg-white border border-slate-200 rounded-[28px] focus:outline-none shadow-sm font-bold text-sm"
+          />
+        </div>
+
+        {/* 동기화 상태 아이콘 */}
+        <div className="flex items-center justify-center gap-4 py-1">
+          <div className="flex items-center gap-2 text-slate-300">
+            <Monitor size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Desktop</span>
+          </div>
+          <div className="w-12 h-[1px] bg-slate-200"></div>
+          <div className="flex items-center gap-2 text-slate-300">
+            <Smartphone size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Mobile</span>
+          </div>
+        </div>
+
+        {/* 고객 리스트 카드 */}
+        <div className="space-y-4 pt-2">
+          {filteredCustomers.length === 0 && (
+            <div className="py-20 text-center opacity-30">
+              <p className="font-black text-xs uppercase tracking-widest italic tracking-tighter">No Customer Data Found</p>
+            </div>
+          )}
+          {filteredCustomers.map(c => {
+            const today = new Date().toISOString().split('T')[0];
+            const isLate = c.nextContactDate && c.nextContactDate <= today;
+            return (
+              <div key={c.id} className={`bg-white border ${isLate ? 'border-red-100 ring-1 ring-red-50' : 'border-slate-100'} rounded-[44px] p-6 shadow-sm hover:shadow-md transition-all active:scale-[0.99]`}>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="font-black text-slate-800 text-xl leading-tight mb-1 flex items-center gap-2">
+                      {c.name}
+                      {isLate && <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>}
+                    </h4>
+                    <p className="text-[11px] font-bold text-slate-400 font-mono tracking-tight">{c.phone}</p>
+                  </div>
+                  <div className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${isLate ? 'bg-red-50 text-red-500 border-red-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                    {c.status}
+                  </div>
+                </div>
+                {c.nextContactDate && (
+                  <div className="flex items-center gap-2 mb-3 text-[11px] font-bold text-slate-500">
+                    <Calendar size={12} className={isLate ? "text-red-400" : "text-slate-300"}/> 
+                    연락 예정일: <span className={isLate ? "text-red-500 underline" : ""}>{c.nextContactDate}</span>
+                  </div>
+                )}
+                <div className="bg-slate-50/50 rounded-3xl p-5 mb-5 text-[13px] text-slate-600 font-medium italic leading-relaxed">
+                  "{c.notes || '상담 메모 없음'}"
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => window.location.href=`tel:${c.phone.replace(/[^0-9]/g,'')}`} className="flex-[4] bg-slate-900 text-white py-4.5 rounded-[22px] flex items-center justify-center gap-2 font-black text-xs shadow-xl active:scale-95 transition-all">전화하기</button>
+                  <button onClick={() => window.location.href=`sms:${c.phone.replace(/[^0-9]/g,'')}`} className="flex-[4] bg-white border border-slate-200 py-4.5 rounded-[22px] flex items-center justify-center gap-2 font-black text-xs shadow-sm active:scale-95 transition-all">문자전송</button>
+                  <button onClick={() => openModal(c)} className="flex-1 py-4.5 bg-slate-50 text-slate-400 rounded-[20px] flex items-center justify-center active:scale-95"><Edit3 size={16}/></button>
+                  <button onClick={() => handleDelete(c.id)} className="flex-1 py-4.5 bg-slate-50 text-slate-300 rounded-[20px] flex items-center justify-center active:scale-95 hover:text-red-400"><Trash2 size={16}/></button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
+
+      {/* 입력/수정 모달 */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[110] bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+            <button onClick={closeModal} className="p-2 text-slate-400 active:scale-75 transition-transform"><X size={28} /></button>
+            <h2 className="font-black text-lg text-slate-800 italic uppercase">고객 상세 정보</h2>
+            <button onClick={handleSave} className="text-blue-600 font-black px-4 active:opacity-50">저장</button>
+          </div>
+          <div className="p-6 space-y-8 overflow-y-auto pb-44 no-scrollbar">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">성함</label>
+                <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-black text-base focus:bg-white outline-none" placeholder="이름 입력" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">상태</label>
+                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-bold appearance-none outline-none">
+                  <option value="잠재고객">잠재고객</option>
+                  <option value="계약완료">계약완료</option>
+                  <option value="긴급">긴급</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">연락처</label>
+              <input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-bold font-mono text-base outline-none" placeholder="010-0000-0000" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-red-500">연락 예정일</label>
+              <input type="date" value={formData.nextContactDate} onChange={e => setFormData({...formData, nextContactDate: e.target.value})} className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-bold text-base outline-none" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center px-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">상담 메모</label>
+                <button onClick={startVoice} className={`flex items-center gap-2 px-4 py-2 rounded-full font-black text-[10px] uppercase transition-all shadow-sm ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white border border-slate-100 text-slate-500'}`}>
+                  <Mic size={12} /> {isListening ? '듣고 있습니다' : '음성 입력'}
+                </button>
+              </div>
+              <textarea rows="8" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[32px] resize-none text-sm italic leading-relaxed outline-none focus:bg-white" placeholder="상담 내용을 입력하세요..." />
+            </div>
+          </div>
+          <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+            <button onClick={handleSave} className="w-full py-5 bg-slate-900 text-white rounded-[28px] font-black shadow-2xl active:scale-[0.97] transition-all flex items-center justify-center gap-3">
+              <Database size={18} />
+              클라우드 실시간 동기화 저장
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 음성 인식 활성화 시 시각적 안내 */}
+      {isListening && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center text-white p-10 text-center animate-in fade-in duration-300">
+          <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-8 animate-pulse border border-white/20 shadow-[0_0_50px_rgba(239,68,68,0.3)]">
+            <Mic size={40} className="text-red-400" />
+          </div>
+          <h3 className="text-2xl font-black mb-2 italic">상담 내용을 말씀하세요</h3>
+          <p className="text-white/40 text-sm font-bold uppercase tracking-[0.2em]">Voice Capturing Mode</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
