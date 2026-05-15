@@ -3,72 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Pro Secure Flow V63</title>
+    <title>CRM</title>
+    <!-- 라이브러리 및 폰트 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .active-scale:active { transform: scale(0.95); transition: 0.1s; }
-        .bg-blur { backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.9); }
-        .loading-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .active-scale:active { transform: scale(0.96); transition: 0.1s; }
         
-        /* 단계별 테마 */
-        .theme-전체 { --theme-color: #475569; --theme-bg: #f1f5f9; }
-        .theme-긴급 { --theme-color: #ef4444; --theme-bg: #fef2f2; }
-        .theme-미연락 { --theme-color: #f59e0b; --theme-bg: #fffbeb; }
-        .theme-상담진행 { --theme-color: #3b82f6; --theme-bg: #eff6ff; }
-        .theme-사은품 { --theme-color: #10b981; --theme-bg: #f0fdf4; }
+        /* 테마별 색상 */
+        .theme-전체 { --theme-color: #475569; }
+        .theme-긴급 { --theme-color: #ef4444; }
+        .theme-미연락 { --theme-color: #f59e0b; }
+        .theme-상담진행 { --theme-color: #3b82f6; }
+        .theme-사은품 { --theme-color: #10b981; }
         
         .tab-active { color: var(--theme-color); border-bottom: 3px solid var(--theme-color); font-weight: 900; }
         .tab-inactive { color: #94a3b8; border-bottom: 3px solid transparent; }
 
-        /* 콤팩트 카드 디자인 */
-        .image-preview-card { width: 100%; height: 90px; object-fit: cover; border-radius: 12px; margin-bottom: 6px; border: 1px solid #f1f5f9; }
-        .inline-notes { width: 100%; background: transparent; border: none; outline: none; resize: none; font-style: italic; font-weight: 600; line-height: 1.4; color: #475569; font-size: 13px; }
-        .inline-notes:focus { color: #000; background: #fff; padding: 4px; border-radius: 6px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-        
-        .direct-select { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 99px; padding: 4px 8px; font-weight: 800; color: #475569; appearance: none; outline: none; cursor: pointer; text-align: center; }
-        .product-select { font-size: 14px; border-color: #3b82f6; color: #3b82f6; min-width: 75px; }
-        .category-direct-select { font-size: 12px; border-color: #cbd5e1; min-width: 75px; }
+        /* 카드 UI 스타일 */
+        .direct-select { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 99px; padding: 4px 10px; font-weight: 800; color: #475569; appearance: none; outline: none; cursor: pointer; text-align: center; }
+        .product-select { font-size: 14px; border-color: #3b82f6; color: #3b82f6; min-width: 80px; }
+        .category-direct-select { font-size: 11px; border-color: #cbd5e1; min-width: 80px; }
 
-        .urgent-card { border: 2px solid #ef4444 !important; background-color: #fffaf0 !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1); }
+        .urgent-card { border: 2px solid #ef4444 !important; background-color: #fffafb !important; }
         .urgent-btn-active { background: #ef4444 !important; color: white !important; animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes pulse-red { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-        .stat-box { background: white; border-radius: 14px; padding: 8px; flex: 1; text-align: center; border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-width: 65px; }
+        /* 메모 영역: 성함과 동일한 Pretendard 폰트 */
+        .memo-container { background: #f9fafb; border-radius: 12px; border: 1px solid #f1f5f9; padding: 12px; }
+        .inline-notes { 
+            width: 100%; 
+            background: transparent; 
+            border: none; 
+            outline: none; 
+            resize: none; 
+            font-weight: 600; 
+            line-height: 1.5; 
+            color: #334155; 
+            font-size: 14px; 
+            font-family: 'Pretendard', sans-serif;
+        }
+        
+        .loading-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 pb-24 select-none theme-전체" id="mainBody">
 
-    <!-- 보안 암호 화면 (7604) -->
-    <div id="lock-screen" class="fixed inset-0 z-[300] bg-slate-900 flex flex-col items-center justify-center p-10 text-white transition-all duration-500">
-        <div class="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center mb-8 shadow-2xl">
-            <i class="fa-solid fa-lock text-3xl text-red-500"></i>
+    <!-- 보안 화면 (암호: 7604) -->
+    <div id="lock-screen" class="fixed inset-0 z-[300] bg-white flex flex-col items-center justify-center p-6">
+        <div class="w-full max-w-[260px] text-center space-y-10">
+            <div class="space-y-1">
+                <h1 class="text-4xl font-black tracking-tighter text-slate-900 leading-none">CRM</h1>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Cloud System</p>
+            </div>
+            <div class="space-y-4">
+                <input type="password" id="passwordInput" inputmode="numeric" autofocus maxlength="4"
+                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-[24px] py-5 text-center text-4xl font-black outline-none focus:border-blue-500 focus:bg-white transition-all" 
+                    placeholder="••••">
+                <button onclick="checkPassword()" 
+                    class="w-full bg-slate-900 text-white py-4.5 rounded-[24px] font-black active-scale shadow-xl text-lg uppercase tracking-wider transition-all">Unlock Access</button>
+            </div>
+            <p id="password-error" class="hidden text-red-500 text-xs font-bold animate-pulse">비밀번호가 올바르지 않습니다.</p>
         </div>
-        <h2 class="text-xl font-black mb-1 italic tracking-tighter uppercase text-center">CRM Pro Secure</h2>
-        <p class="text-white/30 text-[9px] uppercase tracking-[0.4em] mb-10 italic">Password: 7604</p>
-        <input type="password" id="passwordInput" inputmode="numeric" autofocus class="w-full max-w-[220px] bg-white/10 border-2 border-white/20 rounded-2xl py-4 text-center text-4xl font-black outline-none focus:border-red-500 transition-all mb-4" placeholder="••••">
-        <button onclick="checkPassword()" class="w-full max-w-[220px] bg-red-600 text-white py-4 rounded-2xl font-black active-scale shadow-lg">시스템 접속</button>
-        <p id="password-error" class="hidden text-red-400 text-xs mt-4 font-bold">비밀번호가 올바르지 않습니다.</p>
     </div>
 
-    <!-- 로딩 화면 -->
-    <div id="loading-screen" class="fixed inset-0 z-[200] bg-white hidden flex flex-col items-center justify-center p-6 text-center border-t-4 border-blue-500">
-        <div class="w-10 h-10 border-4 border-slate-100 border-t-blue-600 rounded-full loading-spin mb-4"></div>
-        <p class="text-slate-500 font-black text-[10px] uppercase tracking-widest text-center italic">Cloud Syncing...</p>
+    <!-- 로딩 인디케이터 -->
+    <div id="loading-screen" class="fixed inset-0 z-[200] bg-white/95 backdrop-blur-md hidden flex flex-col items-center justify-center p-6">
+        <div class="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full loading-spin mb-4 shadow-sm"></div>
+        <p id="loading-text" class="text-slate-500 font-black text-[11px] tracking-widest uppercase italic text-center">Syncing CRM Database...</p>
     </div>
 
     <!-- 헤더 -->
-    <header class="sticky top-0 z-40 bg-blur border-b border-slate-100 p-3 px-5 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-2.5">
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-3 px-5 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-bolt text-[14px] text-yellow-400"></i>
+                <i class="fa-solid fa-crown text-[10px] text-yellow-400"></i>
             </div>
-            <h1 class="text-lg font-black tracking-tighter text-slate-800 italic uppercase leading-none">CRM Pro</h1>
+            <h1 class="text-xl font-black tracking-tighter uppercase leading-none">CRM</h1>
         </div>
         <div class="flex items-center gap-2">
             <button onclick="startSmartVoice()" class="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg active-scale">
@@ -80,30 +95,30 @@
         </div>
     </header>
 
-    <!-- 실시간 파이프라인 통계 -->
-    <div class="px-3 pt-3">
-        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            <div class="stat-box bg-red-50/50">
-                <p class="text-[7px] font-black text-red-400 uppercase tracking-tighter">Emergency</p>
-                <p id="stat-urgent" class="text-base font-black text-red-500">0</p>
+    <!-- 현황 통계 -->
+    <div class="px-4 pt-4">
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-2.5 flex-1 min-width-[70px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-red-500 uppercase tracking-tighter">Emergency</p>
+                <p id="stat-urgent" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
-            <div class="stat-box">
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Wait</p>
-                <p id="stat-미연락" class="text-base font-black text-orange-500">0</p>
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-2.5 flex-1 min-width-[70px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-orange-500 uppercase tracking-tighter">Wait</p>
+                <p id="stat-미연락" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
-            <div class="stat-box">
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Consult</p>
-                <p id="stat-상담진행" class="text-base font-black text-blue-600">0</p>
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-2.5 flex-1 min-width-[70px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-blue-500 uppercase tracking-tighter">Active</p>
+                <p id="stat-상담진행" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
-            <div class="stat-box">
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Gift</p>
-                <p id="stat-사은품" class="text-base font-black text-green-600">0</p>
+            <div class="stat-box bg-white border border-slate-100 rounded-2xl p-2.5 flex-1 min-width-[70px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-green-500 uppercase tracking-tighter">Gift</p>
+                <p id="stat-사은품" class="text-lg font-black text-slate-800 leading-tight">0</p>
             </div>
         </div>
     </div>
 
-    <!-- 탭 메뉴 -->
-    <nav class="sticky top-[57px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar">
+    <!-- 탭 네비게이션 -->
+    <nav class="sticky top-[57px] z-30 bg-white border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar mt-2">
         <button onclick="setCategory('전체')" id="tab-전체" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active">전체</button>
         <button onclick="setCategory('긴급')" id="tab-긴급" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">긴급관리</button>
         <button onclick="setCategory('미연락')" id="tab-미연락" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">미연락</button>
@@ -111,23 +126,25 @@
         <button onclick="setCategory('사은품')" id="tab-사은품" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">사은품</button>
     </nav>
 
-    <main class="max-w-xl mx-auto p-3 space-y-3">
-        <!-- 통합 검색 -->
+    <!-- 메인 리스트 -->
+    <main class="max-w-xl mx-auto p-3 space-y-4">
         <div class="relative">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
             <input type="text" id="searchInput" oninput="render()" placeholder="이름, 번호, 품목 검색..." 
-                class="w-full pl-9 pr-4 py-3 bg-white border border-slate-200 rounded-[16px] focus:outline-none shadow-sm text-sm font-bold">
+                class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-[18px] focus:outline-none shadow-sm text-sm font-bold">
         </div>
         
+        <!-- 정렬 및 필터 (품목 정렬 로직 포함) -->
         <div class="flex items-center justify-between px-1">
-            <div class="flex gap-1.5 flex-1 overflow-x-auto no-scrollbar">
-                <select id="sortFilter" onchange="render()" class="bg-white border border-slate-200 rounded-full px-2.5 py-1.5 text-[9px] font-black text-slate-600 outline-none">
-                    <option value="update">최신업데이트순</option>
+            <div class="flex gap-1.5 flex-1">
+                <select id="sortFilter" onchange="render()" class="bg-white border border-slate-200 rounded-full px-3 py-1.5 text-[10px] font-black text-slate-600 outline-none shadow-sm">
+                    <option value="update">최신 수정순</option>
                     <option value="contact">처리기한순</option>
-                    <option value="name">성함순</option>
+                    <option value="name">성함 가나다순</option>
+                    <option value="product">품목별 정렬</option>
                 </select>
-                <select id="productFilter" onchange="render()" class="bg-white border border-slate-200 rounded-full px-2.5 py-1.5 text-[9px] font-black text-blue-600 outline-none">
-                    <option value="all">품목 전체</option>
+                <select id="productFilter" onchange="render()" class="bg-white border border-slate-200 rounded-full px-3 py-1.5 text-[10px] font-black text-blue-600 outline-none shadow-sm">
+                    <option value="all">품목 필터: 전체</option>
                     <option value="티비">티비</option>
                     <option value="냉장고">냉장고</option>
                     <option value="에어컨">에어컨</option>
@@ -137,7 +154,7 @@
                     <option value="김치냉장고">김냉</option>
                 </select>
             </div>
-            <span id="totalBadge" class="text-[8px] font-black text-slate-400 bg-white border border-slate-100 px-3 py-1.5 rounded-full ml-2 flex-none shadow-inner">0 명</span>
+            <span id="totalBadge" class="text-[9px] font-black text-slate-400 bg-white border border-slate-100 px-3 py-1.5 rounded-full flex-none shadow-inner ml-2">0 명</span>
         </div>
 
         <div id="customerList" class="space-y-3"></div>
@@ -145,32 +162,34 @@
 
     <!-- 입력/수정 모달 -->
     <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex-col animate-in slide-in-from-bottom duration-300">
-        <div class="p-4 border-b flex justify-between items-center bg-slate-50/50">
+        <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 id="modalTitle" class="font-black text-base text-slate-800 italic uppercase">고객 데이터 상세</h2>
-            <button onclick="saveCustomer()" class="text-blue-600 font-black px-4 text-lg active-scale uppercase">Save</button>
+            <h2 id="modalTitle" class="font-black text-base text-slate-800 italic uppercase">데이터 상세</h2>
+            <button id="saveBtn" onclick="saveCustomer()" class="text-blue-600 font-black px-4 text-lg active-scale">저장</button>
         </div>
-        <div class="p-5 space-y-4 overflow-y-auto pb-60 no-scrollbar">
-            <div class="bg-blue-50 p-4 rounded-[20px] border border-blue-100 space-y-3 shadow-sm text-[10px]">
-                <div class="flex justify-between items-center text-blue-600 uppercase tracking-widest font-black">
+        <div class="p-5 space-y-5 overflow-y-auto pb-60 no-scrollbar">
+            <!-- AI OCR 엔진 -->
+            <div class="bg-blue-50 p-4 rounded-[24px] border border-blue-100 space-y-3 shadow-sm">
+                <div class="flex justify-between items-center text-blue-600 uppercase tracking-widest font-black text-[10px]">
                     <span><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 사진 분석 등록</span>
-                    <span id="ai-loading" class="hidden animate-pulse italic">Processing...</span>
+                    <span id="ai-loading" class="hidden animate-pulse italic">추출 중...</span>
                 </div>
-                <textarea id="aiInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-20 shadow-inner" placeholder="이름 번호 품목..."></textarea>
+                <textarea id="aiInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-24 shadow-inner" placeholder="이름 번호 품목..."></textarea>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="document.getElementById('photoInputOCR').click()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3 text-xs font-black active-scale flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-camera"></i> 사진 등록</button>
-                    <button onclick="smartParseAction()" class="bg-blue-600 text-white rounded-xl py-3 text-xs font-black shadow-lg">일괄 추가</button>
+                    <button onclick="document.getElementById('photoInputOCR').click()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3.5 text-xs font-black active-scale flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-camera"></i> 사진 인식</button>
+                    <button onclick="smartParseAction()" class="bg-blue-600 text-white rounded-xl py-3.5 text-xs font-black shadow-lg">텍스트 추가</button>
                     <input type="file" id="photoInputOCR" accept="image/*" class="hidden" onchange="handleImageRecognition(this)">
                 </div>
             </div>
 
+            <!-- 정보 필드 -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">성함</label>
+                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase font-bold">성함 (필수)</label>
                     <input id="formName" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-sm outline-none focus:bg-white shadow-sm">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">업무 단계</label>
+                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase font-bold">업무 단계</label>
                     <select id="formCategory" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none bg-white">
                         <option value="미연락">미연락</option>
                         <option value="상담진행">상담진행</option>
@@ -181,7 +200,11 @@
             
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">상담 품목</label>
+                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase font-bold tracking-tighter">연락처 (필수)</label>
+                    <input id="formPhone" type="tel" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:bg-white shadow-sm" placeholder="번호 입력">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase font-bold">상담 품목</label>
                     <select id="formProduct" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm appearance-none bg-white">
                         <option value="미지정">미지정</option>
                         <option value="티비">티비</option>
@@ -193,60 +216,48 @@
                         <option value="김치냉장고">김냉</option>
                     </select>
                 </div>
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">연락처</label>
-                    <input id="formPhone" type="tel" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm" placeholder="번호 입력">
-                </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 text-[9px] font-black">
+            <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-red-500 ml-1 uppercase">처리기한</label>
-                    <input type="date" id="formDate" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm">
+                    <label class="text-[9px] font-black text-red-500 ml-1 uppercase font-bold">처리기한</label>
+                    <input type="date" id="formDate" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-slate-400 ml-1 uppercase">사진 첨부</label>
+                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase font-bold">사진 첨부</label>
                     <button onclick="document.getElementById('photoInput').click()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-400 active-scale">파일 선택</button>
                     <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(this)">
                 </div>
             </div>
 
             <div id="imageArea" class="hidden relative">
-                <img id="formImagePreview" src="" class="w-full h-40 object-cover rounded-xl border border-slate-100 shadow-sm">
-                <button onclick="removeImage()" class="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center active-scale"><i class="fa-solid fa-xmark"></i></button>
+                <img id="formImagePreview" src="" class="w-full h-44 object-cover rounded-2xl border border-slate-100 shadow-lg">
+                <button onclick="removeImage()" class="absolute top-3 right-3 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center active-scale"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div class="space-y-1">
-                <label class="text-[9px] font-black text-slate-400 ml-1 uppercase tracking-widest">상담 메모</label>
-                <textarea id="formNotes" rows="6" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm italic resize-none outline-none focus:bg-white shadow-inner" placeholder="내용을 기록하세요."></textarea>
+                <label class="text-[9px] font-black text-slate-400 ml-1 uppercase tracking-widest font-bold">상담 메모</label>
+                <textarea id="formNotes" rows="8" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-base font-semibold outline-none focus:bg-white shadow-inner" placeholder="내용을 입력하세요."></textarea>
             </div>
         </div>
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100">
-            <button onclick="saveCustomer()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-lg">안전하게 저장 완료</button>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+            <button onclick="saveCustomer()" class="w-full py-5 bg-slate-900 text-white rounded-3xl font-black shadow-lg text-base active-scale uppercase tracking-wider">데이터 동기화 완료</button>
         </div>
     </div>
 
     <!-- 삭제 확인 모달 -->
-    <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6 transition-all">
-        <div class="bg-white w-full max-w-xs rounded-[32px] p-6 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+    <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6">
+        <div class="bg-white w-full max-w-xs rounded-[32px] p-6 text-center shadow-2xl scale-in duration-200">
             <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash-can text-lg"></i>
             </div>
-            <h3 class="text-base font-black text-slate-800 mb-2">정말 삭제할까요?</h3>
-            <p class="text-[11px] text-slate-400 mb-6">해당 고객 데이터가 영구 삭제됩니다.</p>
+            <h3 class="text-base font-black text-slate-800 mb-2">데이터를 삭제할까요?</h3>
+            <p class="text-[11px] text-slate-400 mb-6 leading-relaxed">복구가 불가능한 작업입니다.</p>
             <div class="flex gap-3">
                 <button onclick="closeDeleteModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs">취소</button>
-                <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-500 text-white rounded-2xl font-black text-xs active-scale">삭제</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-500 text-white rounded-2xl font-black text-xs active-scale">확인</button>
             </div>
         </div>
-    </div>
-
-    <!-- 음성 인식 가이드 -->
-    <div id="voiceOverlay" class="fixed inset-0 z-[250] bg-slate-900/95 backdrop-blur-3xl hidden flex flex-col items-center justify-center text-white p-10 text-center animate-in fade-in duration-300">
-        <div class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse border-2 border-white/20 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
-            <i class="fa-solid fa-microphone text-4xl text-red-500"></i>
-        </div>
-        <p class="text-xl font-black italic uppercase tracking-tighter">듣고 있습니다</p>
     </div>
 
     <script type="module">
@@ -254,235 +265,103 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 1. 설정 및 암호 (7604)
+        // ⚙️ 보안 및 채널 설정
         const masterPassword = "7604";
         const apiKey = ""; 
-        const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey":""}';
-        const firebaseConfig = JSON.parse(configStr);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v63-final-stable';
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v66-master-flow';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
         let customers = [];
         let editingId = null;
         let deletingId = null;
-        let currentUser = null;
         let currentCategory = '전체';
         let currentImageData = "";
 
         const products = ['미지정', '티비', '냉장고', '에어컨', '혼수', '인덕션', '식기세척기', '김치냉장고'];
         const categories = ['미연락', '상담진행', '사은품'];
 
-        // [복구] 기존 고객 명단 10인 고정 ID 부여
-        const recoveryList = [
-            { id: 'fixed-1', name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', isUrgent: true, product: '에어컨', notes: '오늘 연락 필수!', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-2', name: '조수진', phone: '010-4416-8488', category: '상담진행', isUrgent: false, product: '혼수', notes: '박정근 담당', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-3', name: '장성필', phone: '010-4553-6113', category: '상담진행', isUrgent: false, product: '냉장고', notes: '견적 요청 / 결정 대기', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-4', name: '김민규', phone: '010-2646-7785', category: '미연락', isUrgent: false, product: '에어컨', notes: '이사 가전 상담 예정', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-5', name: '박정권', phone: '010-9107-5798', category: '상담진행', isUrgent: false, product: '미지정', notes: '주요 고객님 상담 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-6', name: '차은주', phone: '010-4875-9936', category: '상담진행', isUrgent: false, product: '식기세척기', notes: '설치 환경 확인 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-7', name: '최진우', phone: '010-3814-7221', category: '미연락', isUrgent: false, product: '티비', notes: '75인치 모델 문의', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-8', name: '최나임', phone: '010-3091-4080', category: '상담진행', isUrgent: true, product: '인덕션', notes: '조건 최종 조율 중 (긴급)', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-9', name: '임수정', phone: '010-2521-5006', category: '상담진행', isUrgent: false, product: '냉장고', notes: '상담 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { id: 'fixed-10', name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '본인 기록용 카드', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() }
-        ];
-
+        // 1. 보안 체크
         window.checkPassword = function() {
             const input = document.getElementById('passwordInput').value;
             if (input === masterPassword) {
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('loading-screen').classList.remove('hidden');
-                init(); 
+                initApp();
             } else {
-                document.getElementById('password-error').classList.remove('hidden');
+                const err = document.getElementById('password-error');
+                err.classList.remove('hidden');
                 document.getElementById('passwordInput').value = "";
                 document.getElementById('passwordInput').focus();
             }
         };
 
-        const formatPhone = (val) => {
-            if (!val) return '';
-            let num = val.toString().replace(/[^0-9]/g, '');
-            if (num.length === 8) num = '010' + num;
-            if (num.length === 11) return num.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
-            return val;
-        };
-
-        // 3. 실시간 데이터 처리
-        window.fastUpdate = async (id, field, value) => {
-            const ts = new Date().toISOString();
-            if (db && currentUser) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { [field]: value, updatedAt: ts }, { merge: true });
-            else { const idx = customers.findIndex(c => c.id === id); if (idx !== -1) { customers[idx][field] = value; customers[idx].updatedAt = ts; saveToStorage(); render(); } }
-        };
-
-        // [긴급 토글 로직 수정] 확실한 해제를 위해 명시적 참/거짓 부여
-        window.toggleUrgent = async (id) => {
-            const c = customers.find(item => item.id === id);
-            if (!c) return;
-            const currentState = c.isUrgent === true; // 확실하게 boolean 체크
-            await fastUpdate(id, 'isUrgent', !currentState);
-        };
-
-        const smartSaveOrUpdate = async (data) => {
-            const cleanPhone = formatPhone(data.phone);
-            const existing = customers.find(c => formatPhone(c.phone) === cleanPhone && cleanPhone !== "");
-            const ts = new Date().toISOString();
-            if (existing && !editingId) {
-                const combinedNotes = `[${new Date().toLocaleDateString()}] ${data.notes}\n---\n${existing.notes || ''}`;
-                if (db && currentUser) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', existing.id), { notes: combinedNotes, updatedAt: ts }, { merge: true });
-            } else {
-                const targetId = editingId || (Date.now().toString() + Math.random().toString(36).substr(2, 4));
-                const entry = { ...data, phone: cleanPhone, updatedAt: ts, registeredAt: editingId ? (customers.find(c => c.id === editingId)?.registeredAt || ts) : ts, isUrgent: data.isUrgent || false };
-                if (db && currentUser) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', targetId), entry, { merge: true });
-                else { if (editingId) { const idx = customers.findIndex(item => item.id === editingId); if (idx !== -1) customers[idx] = entry; } else { customers.unshift({ id: targetId, ...entry }); } saveToStorage(); render(); }
-            }
-        };
-
-        // 4. 초기화 및 동기화
-        const init = async () => {
+        // 2. 파이베이스 연동
+        async function initApp() {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
-                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken); else await signInAnonymously(auth);
-                onAuthStateChanged(auth, (user) => { if (user) { currentUser = user; startFirestoreSync(); } else useLocalStorage(); });
-                setTimeout(() => { if(document.getElementById('loading-screen').style.display !== 'none') useLocalStorage(); }, 5000);
-            } catch (e) { useLocalStorage(); }
-        };
 
-        const startFirestoreSync = () => {
-            if (!currentUser || !db) return;
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'customers'), async (snapshot) => {
-                if (snapshot.empty) {
-                    for (const item of recoveryList) {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', item.id), item);
-                    }
-                } else { customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); render(); }
-                document.getElementById('loading-screen').style.display = 'none';
-            });
-        };
+                const timeout = setTimeout(() => { if (customers.length === 0) renderFallback(); }, 5000);
 
-        const useLocalStorage = () => { customers = JSON.parse(localStorage.getItem('crm_v63_s')) || recoveryList; render(); document.getElementById('loading-screen').style.display = 'none'; };
-        const saveToStorage = () => localStorage.setItem('crm_v63_s', JSON.stringify(customers));
+                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                else await signInAnonymously(auth);
 
-        // 5. 렌더링 엔진 (긴급 최상단 고정 로직)
-        window.render = function() {
-            const container = document.getElementById('customerList'); if (!container) return;
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const sortMode = document.getElementById('sortFilter').value;
-            const productFilter = document.getElementById('productFilter').value;
-            
-            // 통계
-            categories.forEach(cat => { document.getElementById(`stat-${cat}`).innerText = customers.filter(c => c.category === cat).length; });
-            document.getElementById('stat-urgent').innerText = customers.filter(c => c.isUrgent === true).length;
-
-            let filtered = [];
-            if (currentCategory === '전체') filtered = customers;
-            else if (currentCategory === '긴급') filtered = customers.filter(c => c.isUrgent === true);
-            else filtered = customers.filter(c => c.category === currentCategory);
-
-            filtered = filtered.filter(c => 
-                (c.name || '').toLowerCase().includes(search) || (c.phone || '').includes(search) || (c.product || '').toLowerCase().includes(search)
-            );
-            if (productFilter !== 'all') filtered = filtered.filter(c => (c.product || '미지정') === productFilter);
-
-            // [정렬] 긴급 우선 + 정렬 기준
-            filtered.sort((a, b) => {
-                const aU = a.isUrgent === true ? 0 : 1;
-                const bU = b.isUrgent === true ? 0 : 1;
-                if (aU !== bU) return aU - bU;
-                if (sortMode === 'update') return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
-                if (sortMode === 'contact') return new Date(a.nextContactDate || '9999-12-31') - new Date(b.nextContactDate || '9999-12-31');
-                if (sortMode === 'name') return (a.name || '').localeCompare(b.name || '');
-                return 0;
-            });
-
-            document.getElementById('totalBadge').innerText = `${filtered.length} 명`;
-            container.innerHTML = '';
-
-            filtered.forEach(c => {
-                const isUrgent = c.isUrgent === true;
-                const cleanPhone = (c.phone || '').replace(/[^0-9]/g,'');
-                const pOpts = products.map(p => `<option value="${p}" ${c.product === p ? 'selected' : ''}>${p}</option>`).join('');
-                const cOpts = categories.map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
-
-                container.innerHTML += `
-                    <div class="bg-white p-3.5 rounded-[24px] border ${isUrgent ? 'urgent-card' : 'border-slate-100'} shadow-sm active:scale-[0.99] transition-all">
-                        <div class="flex justify-between items-center mb-2">
-                            <div class="flex items-center gap-2 flex-1 overflow-hidden">
-                                <div class="overflow-hidden">
-                                    <h4 class="font-black text-slate-800 text-base leading-tight truncate">
-                                        ${c.name} ${isUrgent ? '<i class="fa-solid fa-fire-flame-curved text-red-500 ml-0.5 animate-pulse"></i>' : ''}
-                                    </h4>
-                                    <p class="text-[10px] font-bold text-slate-300 font-mono tracking-tighter">${formatPhone(c.phone || 'no phone')}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1 ml-2">
-                                <button onclick="toggleUrgent('${c.id}')" 
-                                    class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] shadow-sm transition-all ${isUrgent ? 'urgent-btn-active' : 'bg-slate-50 text-slate-400 active-scale'}">
-                                    <i class="fa-solid fa-bell"></i>
-                                </button>
-                                <select onchange="fastUpdate('${c.id}', 'category', this.value)" class="direct-select category-direct-select">${cOpts}</select>
-                                <select onchange="fastUpdate('${c.id}', 'product', this.value)" class="direct-select product-select">${pOpts}</select>
-                            </div>
-                        </div>
-
-                        ${c.imageData ? `<img src="${c.imageData}" class="image-preview-card" onclick="window.open('${c.imageData}')">` : ''}
-
-                        <div class="flex flex-wrap gap-1.5 mb-2 items-center text-[8px] font-black text-slate-300 uppercase">
-                            <span><i class="fa-solid fa-clock mr-0.5"></i> ${new Date(c.updatedAt || Date.now()).toLocaleDateString()}</span>
-                            ${c.nextContactDate ? `<span class="text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">D-DAY: ${c.nextContactDate}</span>` : ''}
-                        </div>
-
-                        <div class="bg-slate-50/60 rounded-xl p-2.5 mb-3 border border-slate-50 shadow-inner overflow-hidden">
-                            <textarea class="inline-notes" onblur="fastUpdate('${c.id}', 'notes', this.value)" placeholder="메모를 입력하세요..." rows="1">${c.notes || ''}</textarea>
-                        </div>
-                        
-                        <div class="flex items-center gap-1.5">
-                            <a href="tel:${cleanPhone}" class="flex-[3] h-9 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] active-scale no-underline shadow-md"><i class="fa-solid fa-phone"></i> 전화</a>
-                            <a href="sms:${cleanPhone}" class="flex-[3] h-9 bg-white border border-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] active-scale no-underline shadow-sm"><i class="fa-solid fa-comment-dots text-slate-400"></i> 문자</a>
-                            <button onclick="editCustomer('${c.id}')" class="flex-1 h-9 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center active-scale"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="requestDelete('${c.id}')" class="flex-1 h-9 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center active-scale hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                    </div>
-                `;
-            });
-        };
-
-        // 6. 삭제 제어 핸들러
-        window.requestDelete = (id) => {
-            const c = customers.find(item => item.id === id); 
-            if (c && c.isUrgent === true) return alert("긴급 해제 후 삭제 가능합니다.");
-            deletingId = id;
-            document.getElementById('deleteModal').classList.remove('hidden');
-            document.getElementById('deleteModal').classList.add('flex');
-            document.getElementById('confirmDeleteBtn').onclick = executeDelete;
-        };
-
-        window.closeDeleteModal = () => { document.getElementById('deleteModal').classList.add('hidden'); deletingId = null; };
-
-        async function executeDelete() {
-            if (!deletingId) return;
-            if (db && currentUser) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', deletingId));
-            else { customers = customers.filter(item => item.id !== deletingId); saveToStorage(); render(); }
-            closeDeleteModal();
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        clearTimeout(timeout);
+                        const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+                        onSnapshot(ref, (snapshot) => {
+                            customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            if (customers.length === 0) seedInitialData();
+                            render();
+                            document.getElementById('loading-screen').classList.add('hidden');
+                        }, (err) => renderFallback());
+                    } else renderFallback();
+                });
+            } catch (e) { renderFallback(); }
         }
 
-        // 7. 기타 UI 기능
-        window.saveCustomer = async function() {
-            const name = document.getElementById('formName').value; let phone = document.getElementById('formPhone').value; const product = document.getElementById('formProduct').value; const notes = document.getElementById('formNotes').value; const cat = document.getElementById('formCategory').value; const date = document.getElementById('formDate').value;
-            if (!name || !phone) return;
-            await smartSaveOrUpdate({ name: name.trim(), phone, product, notes: notes.trim(), category: cat, nextContactDate: date });
-            closeModal();
-        };
+        async function seedInitialData() {
+            const initialList = [
+                { name: '박정권', phone: '010-9107-5798', category: '상담진행', isUrgent: false, product: '미지정', notes: '주요 고객님 결정 대기 중', updatedAt: new Date().toISOString() },
+                { name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', isUrgent: true, product: '에어컨', notes: '오늘 연락 필수!', updatedAt: new Date().toISOString() },
+                { name: '조수진', phone: '010-4416-8488', category: '상담진행', isUrgent: false, product: '혼수', notes: '상담 진행 중', updatedAt: new Date().toISOString() },
+                { name: '장성필', phone: '010-4553-6113', category: '상담진행', isUrgent: false, product: '냉장고', notes: '견적 요청 / 결정 대기', updatedAt: new Date().toISOString() },
+                { name: '김민규', phone: '010-2646-7785', category: '미연락', isUrgent: false, product: '에어컨', notes: '이사 가전 상담 예정', updatedAt: new Date().toISOString() },
+                { name: '차은주', phone: '010-4875-9936', category: '상담진행', isUrgent: false, product: '식기세척기', notes: '설치 환경 확인 중', updatedAt: new Date().toISOString() },
+                { name: '최진우', phone: '010-3814-7221', category: '미연락', isUrgent: false, product: '티비', notes: '75인치 모델 문의', updatedAt: new Date().toISOString() },
+                { name: '최나임', phone: '010-3091-4080', category: '상담진행', isUrgent: true, product: '인덕션', notes: '조건 최종 조율 중 (긴급)', updatedAt: new Date().toISOString() },
+                { name: '임수정', phone: '010-2521-5006', category: '상담진행', isUrgent: false, product: '냉장고', notes: '상담 중', updatedAt: new Date().toISOString() },
+                { name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '관리자 본인 카드', updatedAt: new Date().toISOString() }
+            ];
+            for (const item of initialList) {
+                const id = 'seed-' + Math.random().toString(36).substr(2, 5);
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), item);
+            }
+        }
 
+        function renderFallback() {
+            render();
+            document.getElementById('loading-screen').classList.add('hidden');
+        }
+
+        // 3. AI 사진 인식 (수리 및 강화)
         window.handleImageRecognition = async function(input) {
             const file = input.files[0]; if (!file) return;
-            const loader = document.getElementById('ai-loading'); loader.classList.remove('hidden');
+            const loader = document.getElementById('ai-loading');
+            const mainLoader = document.getElementById('loading-screen');
+            loader.classList.remove('hidden');
+            mainLoader.classList.remove('hidden');
+            document.getElementById('loading-text').innerText = "AI가 장부 사진을 정밀 분석 중입니다...";
+
             const reader = new FileReader();
             reader.onload = async () => {
                 const base64Data = reader.result.split(',')[1];
-                const prompt = "이미지에서 {name, phone, notes} 추출 JSON 배열";
+                const prompt = "CRM 전문가로서 장부나 명함 사진에서 고객 {name: 성함, phone: 번호, notes: 상담내용}을 추출하세요. 반드시 JSON 배열 형식 [{...}]으로만 답하세요. 8자리 번호면 010을 붙이세요. 분석 불가 시 빈 리스트 []를 반환하세요.";
+                
                 try {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                         method: 'POST',
@@ -490,43 +369,146 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64Data } }] }] })
                     });
                     const result = await res.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                    const jsonMatch = text.match(/\[[\s\S]*\]/);
+                    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
                     if (jsonMatch) {
-                        const extracted = JSON.parse(jsonMatch[0]);
-                        for (const item of extracted) await smartSaveOrUpdate({ ...item, category: '미연락', product: '미지정', nextContactDate: '' });
+                        const items = JSON.parse(jsonMatch[0]);
+                        for (const item of items) {
+                            if (item.name || item.phone) {
+                                await smartSaveOrUpdate({ ...item, category: '미연락', product: '미지정' });
+                            }
+                        }
                     }
-                } catch (e) { }
+                } catch (e) { alert("AI 분석 실패. 다시 시도해 주세요."); }
+                
                 loader.classList.add('hidden');
+                mainLoader.classList.add('hidden');
             };
             reader.readAsDataURL(file);
         };
 
-        window.smartParseAction = async function() {
-            const input = document.getElementById('aiInput').value.trim();
-            if (!input) return;
-            const items = input.split(/[\n,;]+/).filter(l => l.trim().length > 1);
-            for (const item of items) {
-                const phoneMatch = item.match(/\d{8,11}/);
-                let extPhone = phoneMatch ? formatPhone(phoneMatch[0]) : "";
-                await smartSaveOrUpdate({ name: item.split(/\s+/)[0] || "신규", phone: extPhone, category: '미연락', product: '미지정', notes: item, nextContactDate: '' });
+        // 4. 저장 로직
+        window.smartSaveOrUpdate = async (data) => {
+            const cleanPhone = (data.phone || '').toString().replace(/[^0-9]/g, '');
+            const ts = new Date().toISOString();
+            
+            const existing = !editingId && cleanPhone !== "" ? customers.find(c => c.phone?.replace(/[^0-9]/g, '') === cleanPhone) : null;
+            const targetId = editingId || (existing ? existing.id : 'id-' + Date.now() + Math.random().toString(36).substr(2, 4));
+            
+            const payload = {
+                name: data.name || "신규고객",
+                phone: cleanPhone.length === 8 ? '010' + cleanPhone : cleanPhone,
+                category: data.category || '미연락',
+                product: data.product || '미지정',
+                notes: data.notes || '',
+                isUrgent: data.isUrgent || (existing ? existing.isUrgent : false),
+                nextContactDate: data.nextContactDate || '',
+                imageData: data.imageData || currentImageData || (existing ? existing.imageData : ""),
+                updatedAt: ts
+            };
+
+            if (existing && !editingId) {
+                payload.notes = `[추가] ${data.notes}\n---\n${existing.notes}`;
             }
-            closeModal(); document.getElementById('aiInput').value = "";
+
+            if (auth?.currentUser) {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', targetId), payload, { merge: true });
+            }
         };
 
-        window.setCategory = (cat) => { currentCategory = cat; document.getElementById('mainBody').className = `bg-slate-50 text-slate-900 pb-32 select-none theme-${cat}`; document.querySelectorAll('nav button').forEach(btn => btn.className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive'); document.getElementById(`tab-${cat}`).className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active'; render(); };
-        window.openModal = function() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); document.getElementById('formCategory').value = currentCategory === '전체' || currentCategory === '긴급' ? '미연락' : currentCategory; removeImage(); };
-        window.closeModal = function() { document.getElementById('modal').classList.add('hidden'); editingId = null; ['formName', 'formPhone', 'formNotes', 'formDate', 'aiInput'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; }); removeImage(); };
-        window.editCustomer = function(id) {
-            const c = customers.find(item => item.id === id); if (!c) return;
-            editingId = id; openModal();
-            document.getElementById('formName').value = c.name || ''; document.getElementById('formPhone').value = c.phone || ''; document.getElementById('formProduct').value = c.product || '미지정'; document.getElementById('formNotes').value = c.notes || ''; document.getElementById('formCategory').value = c.category || '미연락'; document.getElementById('formDate').value = c.nextContactDate || '';
-            if (c.imageData) { currentImageData = c.imageData; document.getElementById('formImagePreview').src = c.imageData; document.getElementById('imageArea').classList.remove('hidden'); }
+        // 5. 렌더링 (품목별 정렬 최적화)
+        window.render = function() {
+            const container = document.getElementById('customerList'); if (!container) return;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const sortMode = document.getElementById('sortFilter').value;
+            const pFilter = document.getElementById('productFilter').value;
+            
+            // 통계
+            if (document.getElementById('stat-미연락')) document.getElementById('stat-미연락').innerText = customers.filter(c => c.category === '미연락').length;
+            if (document.getElementById('stat-상담진행')) document.getElementById('stat-상담진행').innerText = customers.filter(c => c.category === '상담진행').length;
+            if (document.getElementById('stat-사은품')) document.getElementById('stat-사은품').innerText = customers.filter(c => c.category === '사은품').length;
+            if (document.getElementById('stat-urgent')) document.getElementById('stat-urgent').innerText = customers.filter(c => c.isUrgent === true).length;
+
+            let filtered = [];
+            if (currentCategory === '전체') filtered = customers;
+            else if (currentCategory === '긴급') filtered = customers.filter(c => c.isUrgent === true);
+            else filtered = customers.filter(c => c.category === currentCategory);
+
+            filtered = filtered.filter(c => (c.name || '').toLowerCase().includes(search) || (c.phone || '').includes(search) || (c.product || '').toLowerCase().includes(search));
+            if (pFilter !== 'all') filtered = filtered.filter(c => (c.product || '미지정') === pFilter);
+
+            // 정렬 (긴급 우선 + 품목별 정렬 포함)
+            filtered.sort((a, b) => {
+                const aU = a.isUrgent === true ? 0 : 1; const bU = b.isUrgent === true ? 0 : 1;
+                if (aU !== bU) return aU - bU;
+                
+                if (sortMode === 'update') return new Date(b.updatedAt) - new Date(a.updatedAt);
+                if (sortMode === 'contact') return new Date(a.nextContactDate || '9999-12-31') - new Date(b.nextContactDate || '9999-12-31');
+                if (sortMode === 'product') return (a.product || '미지정').localeCompare(b.product || '미지정');
+                return (a.name || '').localeCompare(b.name || '');
+            });
+
+            document.getElementById('totalBadge').innerText = `${filtered.length} 명`;
+            container.innerHTML = '';
+
+            filtered.forEach(c => {
+                const isUrgent = c.isUrgent === true;
+                const pOpts = products.map(p => `<option value="${p}" ${c.product === p ? 'selected' : ''}>${p}</option>`).join('');
+                const cOpts = categories.map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
+
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-[28px] border ${isUrgent ? 'urgent-card' : 'border-slate-100'} shadow-sm transition-all active:scale-[0.99]">
+                        <div class="flex justify-between items-center mb-2.5">
+                            <div class="flex items-center gap-2 flex-1 overflow-hidden">
+                                <div class="overflow-hidden text-left">
+                                    <h4 class="font-black text-slate-800 text-base leading-tight truncate">
+                                        ${c.name} ${isUrgent ? '<i class="fa-solid fa-fire-flame-curved text-red-500 ml-0.5 animate-pulse"></i>' : ''}
+                                    </h4>
+                                    <p class="text-[10px] font-bold text-slate-300 font-mono tracking-tighter">${c.phone || '번호없음'}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 ml-2">
+                                <button onclick="toggleUrgent('${c.id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] shadow-sm transition-all ${isUrgent ? 'urgent-btn-active' : 'bg-slate-50 text-slate-400 active-scale'}"><i class="fa-solid fa-bell"></i></button>
+                                <select onchange="fastUpdate('${c.id}', 'category', this.value)" class="direct-select category-direct-select">${cOpts}</select>
+                                <select onchange="fastUpdate('${c.id}', 'product', this.value)" class="direct-select product-select">${pOpts}</select>
+                            </div>
+                        </div>
+                        ${c.imageData ? `<img src="${c.imageData}" class="image-preview-card" onclick="window.open('${c.imageData}')">` : ''}
+                        <div class="flex flex-wrap gap-1.5 mb-3 items-center text-[8px] font-black text-slate-300 uppercase">
+                            <span><i class="fa-solid fa-clock mr-0.5"></i> ${new Date(c.updatedAt).toLocaleDateString()}</span>
+                            ${c.nextContactDate ? `<span class="text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 font-bold tracking-tighter">기한: ${c.nextContactDate}</span>` : ''}
+                        </div>
+                        <div class="memo-container mb-4">
+                            <textarea class="inline-notes" onblur="fastUpdate('${c.id}', 'notes', this.value)" placeholder="메모가 없습니다..." rows="2">${c.notes || ''}</textarea>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <a href="tel:${c.phone}" class="flex-[3] h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs active-scale no-underline shadow-md"><i class="fa-solid fa-phone"></i> 통화</a>
+                            <a href="sms:${c.phone}" class="flex-[3] h-10 bg-white border border-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2 font-black text-xs active-scale no-underline shadow-sm"><i class="fa-solid fa-message text-slate-400"></i> 문자</a>
+                            <button onclick="editCustomer('${c.id}')" class="flex-1 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center active-scale"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="requestDelete('${c.id}')" class="flex-1 h-10 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center active-scale hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
         };
+
+        // 6. 기타 제어
+        window.fastUpdate = async (id, field, value) => {
+            const ts = new Date().toISOString();
+            if (auth?.currentUser) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { [field]: value, updatedAt: ts }, { merge: true });
+        };
+        window.toggleUrgent = async (id) => { const c = customers.find(item => item.id === id); if (c) await fastUpdate(id, 'isUrgent', !(c.isUrgent === true)); };
+        window.saveCustomer = async function() { const name = document.getElementById('formName').value; const phone = document.getElementById('formPhone').value; if (!name || !phone) return alert('필수 입력 누락'); await smartSaveOrUpdate({ name: name.trim(), phone: phone.trim(), category: document.getElementById('formCategory').value, product: document.getElementById('formProduct').value, notes: document.getElementById('formNotes').value, nextContactDate: document.getElementById('formDate').value, imageData: currentImageData }); closeModal(); };
+        window.requestDelete = (id) => { deletingId = id; document.getElementById('deleteModal').classList.remove('hidden'); document.getElementById('deleteModal').classList.add('flex'); document.getElementById('confirmDeleteBtn').onclick = async () => { if (auth?.currentUser) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', deletingId)); closeDeleteModal(); }; };
+        window.closeDeleteModal = () => { document.getElementById('deleteModal').classList.add('hidden'); deletingId = null; };
+        window.setCategory = (cat) => { currentCategory = cat; document.querySelectorAll('nav button').forEach(btn => btn.className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive'); document.getElementById(`tab-${cat}`).className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active'; render(); };
+        window.openModal = function() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); removeImage(); };
+        window.closeModal = function() { document.getElementById('modal').classList.add('hidden'); editingId = null; removeImage(); document.getElementById('formName').value=''; document.getElementById('formPhone').value=''; document.getElementById('formNotes').value=''; };
+        window.editCustomer = function(id) { const c = customers.find(item => item.id === id); if (!c) return; editingId = id; openModal(); document.getElementById('formName').value = c.name; document.getElementById('formPhone').value = c.phone; document.getElementById('formProduct').value = c.product; document.getElementById('formNotes').value = c.notes; document.getElementById('formCategory').value = c.category; document.getElementById('formDate').value = c.nextContactDate || ''; if (c.imageData) { currentImageData = c.imageData; document.getElementById('formImagePreview').src = c.imageData; document.getElementById('imageArea').classList.remove('hidden'); } };
         window.previewImage = function(input) { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { currentImageData = e.target.result; document.getElementById('formImagePreview').src = currentImageData; document.getElementById('imageArea').classList.remove('hidden'); }; reader.readAsDataURL(file); };
-        window.removeImage = () => { currentImageData = ""; document.getElementById('imageArea').classList.add('hidden'); document.getElementById('photoInput').value = ""; };
-        window.startVoice = (id) => { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) return; const rec = new SpeechRecognition(); rec.lang = 'ko-KR'; rec.onstart = () => document.getElementById('voiceOverlay').classList.remove('hidden'); rec.onend = () => document.getElementById('voiceOverlay').classList.add('hidden'); rec.onresult = (e) => { document.getElementById(id).value += (document.getElementById(id).value ? ' ' : '') + e.results[0][0].transcript; }; rec.start(); };
-        window.startSmartVoice = () => { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) return; const rec = new SpeechRecognition(); rec.lang = 'ko-KR'; rec.onstart = () => document.getElementById('voiceOverlay').classList.remove('hidden'); rec.onend = () => { document.getElementById('voiceOverlay').classList.add('hidden'); setTimeout(() => smartParseAction(), 500); }; rec.onresult = (e) => { openModal(); document.getElementById('aiInput').value = e.results[0][0].transcript; }; rec.start(); };
+        window.removeImage = () => { currentImageData = ""; document.getElementById('imageArea').classList.add('hidden'); };
+        window.smartParseAction = async function() { const input = document.getElementById('aiInput').value.trim(); if (!input) return; const words = input.split(/\s+/); await smartSaveOrUpdate({ name: words[0], phone: words[1] || "", product: words[2] || "미지정", notes: words.slice(3).join(" ") }); closeModal(); document.getElementById('aiInput').value = ""; };
+        window.startSmartVoice = () => { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) return; const rec = new SpeechRecognition(); rec.lang = 'ko-KR'; rec.onstart = () => { document.getElementById('loading-screen').classList.remove('hidden'); document.getElementById('loading-text').innerText = "말씀해 주세요..."; }; rec.onend = () => document.getElementById('loading-screen').classList.add('hidden'); rec.onresult = (e) => { const text = e.results[0][0].transcript; openModal(); document.getElementById('aiInput').value = text; }; rec.start(); };
     </script>
 </body>
 </html>
