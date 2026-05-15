@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Pro Secure Workflow</title>
+    <title>CRM Pro Secure Flow V63</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,7 +27,7 @@
         .tab-active { color: var(--theme-color); border-bottom: 3px solid var(--theme-color); font-weight: 900; }
         .tab-inactive { color: #94a3b8; border-bottom: 3px solid transparent; }
 
-        /* 콤팩트 카드 최적화 */
+        /* 콤팩트 카드 디자인 */
         .image-preview-card { width: 100%; height: 90px; object-fit: cover; border-radius: 12px; margin-bottom: 6px; border: 1px solid #f1f5f9; }
         .inline-notes { width: 100%; background: transparent; border: none; outline: none; resize: none; font-style: italic; font-weight: 600; line-height: 1.4; color: #475569; font-size: 13px; }
         .inline-notes:focus { color: #000; background: #fff; padding: 4px; border-radius: 6px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
@@ -36,7 +36,7 @@
         .product-select { font-size: 14px; border-color: #3b82f6; color: #3b82f6; min-width: 75px; }
         .category-direct-select { font-size: 12px; border-color: #cbd5e1; min-width: 75px; }
 
-        .urgent-card { border: 2px solid #fecaca !important; background-color: #fffaf0 !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08); }
+        .urgent-card { border: 2px solid #ef4444 !important; background-color: #fffaf0 !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1); }
         .urgent-btn-active { background: #ef4444 !important; color: white !important; animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
@@ -51,14 +51,14 @@
             <i class="fa-solid fa-lock text-3xl text-red-500"></i>
         </div>
         <h2 class="text-xl font-black mb-1 italic tracking-tighter uppercase text-center">CRM Pro Secure</h2>
-        <p class="text-white/30 text-[9px] uppercase tracking-[0.4em] mb-10 italic">Enter Master Password (7604)</p>
+        <p class="text-white/30 text-[9px] uppercase tracking-[0.4em] mb-10 italic">Password: 7604</p>
         <input type="password" id="passwordInput" inputmode="numeric" autofocus class="w-full max-w-[220px] bg-white/10 border-2 border-white/20 rounded-2xl py-4 text-center text-4xl font-black outline-none focus:border-red-500 transition-all mb-4" placeholder="••••">
         <button onclick="checkPassword()" class="w-full max-w-[220px] bg-red-600 text-white py-4 rounded-2xl font-black active-scale shadow-lg">시스템 접속</button>
-        <p id="password-error" class="hidden text-red-400 text-xs mt-4 font-bold">암호가 틀렸습니다.</p>
+        <p id="password-error" class="hidden text-red-400 text-xs mt-4 font-bold">비밀번호가 올바르지 않습니다.</p>
     </div>
 
     <!-- 로딩 화면 -->
-    <div id="loading-screen" class="fixed inset-0 z-[200] bg-white hidden flex flex-col items-center justify-center p-6 text-center border-t-4 border-blue-500 transition-opacity">
+    <div id="loading-screen" class="fixed inset-0 z-[200] bg-white hidden flex flex-col items-center justify-center p-6 text-center border-t-4 border-blue-500">
         <div class="w-10 h-10 border-4 border-slate-100 border-t-blue-600 rounded-full loading-spin mb-4"></div>
         <p class="text-slate-500 font-black text-[10px] uppercase tracking-widest text-center italic">Cloud Syncing...</p>
     </div>
@@ -89,11 +89,11 @@
                 <p id="stat-urgent" class="text-base font-black text-red-500">0</p>
             </div>
             <div class="stat-box">
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Waiting</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Wait</p>
                 <p id="stat-미연락" class="text-base font-black text-orange-500">0</p>
             </div>
             <div class="stat-box">
-                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Active</p>
+                <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Consult</p>
                 <p id="stat-상담진행" class="text-base font-black text-blue-600">0</p>
             </div>
             <div class="stat-box">
@@ -113,7 +113,7 @@
     </nav>
 
     <main class="max-w-xl mx-auto p-3 space-y-3">
-        <!-- 검색 및 정렬 -->
+        <!-- 통합 검색 -->
         <div class="relative">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
             <input type="text" id="searchInput" oninput="render()" placeholder="이름, 번호, 품목 검색..." 
@@ -152,7 +152,6 @@
             <button onclick="saveCustomer()" class="text-blue-600 font-black px-4 text-lg active-scale uppercase">Save</button>
         </div>
         <div class="p-5 space-y-4 overflow-y-auto pb-60 no-scrollbar">
-            <!-- AI 사진 인식 -->
             <div class="bg-blue-50 p-4 rounded-[20px] border border-blue-100 space-y-3 shadow-sm text-[10px]">
                 <div class="flex justify-between items-center text-blue-600 uppercase tracking-widest font-black">
                     <span><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 사진 분석 등록</span>
@@ -160,13 +159,12 @@
                 </div>
                 <textarea id="aiInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-20 shadow-inner" placeholder="이름 번호 품목..."></textarea>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="document.getElementById('photoInputOCR').click()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3 text-xs font-black active-scale flex items-center justify-center gap-1"><i class="fa-solid fa-camera"></i> 사진 등록</button>
-                    <button onclick="smartParseAction()" class="bg-blue-600 text-white rounded-xl py-3 text-xs font-black shadow-lg active-scale">일괄 추가</button>
+                    <button onclick="document.getElementById('photoInputOCR').click()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3 text-xs font-black active-scale flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-camera"></i> 사진 등록</button>
+                    <button onclick="smartParseAction()" class="bg-blue-600 text-white rounded-xl py-3 text-xs font-black shadow-lg">일괄 추가</button>
                     <input type="file" id="photoInputOCR" accept="image/*" class="hidden" onchange="handleImageRecognition(this)">
                 </div>
             </div>
 
-            <!-- 개별 입력 필드 -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                     <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">성함</label>
@@ -184,7 +182,7 @@
             
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">품목</label>
+                    <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">상담 품목</label>
                     <select id="formProduct" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm appearance-none bg-white">
                         <option value="미지정">미지정</option>
                         <option value="티비">티비</option>
@@ -215,7 +213,7 @@
             </div>
 
             <div id="imageArea" class="hidden relative">
-                <img id="formImagePreview" src="" class="w-full h-40 object-cover rounded-xl border border-slate-100">
+                <img id="formImagePreview" src="" class="w-full h-40 object-cover rounded-xl border border-slate-100 shadow-sm">
                 <button onclick="removeImage()" class="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center active-scale"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
@@ -229,14 +227,14 @@
         </div>
     </div>
 
-    <!-- 삭제 확인 커스텀 모달 -->
+    <!-- 삭제 확인 모달 -->
     <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6 transition-all">
         <div class="bg-white w-full max-w-xs rounded-[32px] p-6 text-center shadow-2xl animate-in zoom-in-95 duration-200">
             <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash-can text-lg"></i>
             </div>
             <h3 class="text-base font-black text-slate-800 mb-2">정말 삭제할까요?</h3>
-            <p class="text-[11px] text-slate-400 mb-6 leading-relaxed">삭제된 데이터는 복구할 수 없습니다.</p>
+            <p class="text-[11px] text-slate-400 mb-6">해당 고객 데이터가 영구 삭제됩니다.</p>
             <div class="flex gap-3">
                 <button onclick="closeDeleteModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs">취소</button>
                 <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-500 text-white rounded-2xl font-black text-xs active-scale">삭제</button>
@@ -244,7 +242,7 @@
         </div>
     </div>
 
-    <!-- 음성 인식 오버레이 -->
+    <!-- 음성 인식 가이드 -->
     <div id="voiceOverlay" class="fixed inset-0 z-[250] bg-slate-900/95 backdrop-blur-3xl hidden flex flex-col items-center justify-center text-white p-10 text-center animate-in fade-in duration-300">
         <div class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse border-2 border-white/20 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
             <i class="fa-solid fa-microphone text-4xl text-red-500"></i>
@@ -262,7 +260,7 @@
         const apiKey = ""; 
         const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey":""}';
         const firebaseConfig = JSON.parse(configStr);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v62-final-secure';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v63-final-stable';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
@@ -276,18 +274,18 @@
         const products = ['미지정', '티비', '냉장고', '에어컨', '혼수', '인덕션', '식기세척기', '김치냉장고'];
         const categories = ['미연락', '상담진행', '사은품'];
 
-        // [복구] 기존 고객 명단 10인 (업무 흐름에 맞춰 재배치)
+        // [복구] 기존 고객 명단 10인 고정 ID 부여
         const recoveryList = [
-            { name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', isUrgent: true, product: '에어컨', notes: '오늘 연락 필수!', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '조수진', phone: '010-4416-8488', category: '상담진행', isUrgent: false, product: '혼수', notes: '견적서 발송 / 박정근 담당', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '장성필', phone: '010-4553-6113', category: '상담진행', isUrgent: false, product: '냉장고', notes: '견적 요청 / 결정 대기', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '김민규', phone: '010-2646-7785', category: '미연락', isUrgent: false, product: '에어컨', notes: '이사 가전 상담 예정', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '박정권', phone: '010-9107-5798', category: '상담진행', isUrgent: false, product: '미지정', notes: '주요 고객님 상담 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '차은주', phone: '010-4875-9936', category: '상담진행', isUrgent: false, product: '식기세척기', notes: '설치 환경 확인 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '최진우', phone: '010-3814-7221', category: '미연락', isUrgent: false, product: '티비', notes: '75인치 모델 문의', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '최나임', phone: '010-3091-4080', category: '상담진행', isUrgent: true, product: '인덕션', notes: '조건 최종 조율 중 (긴급)', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '임수정', phone: '010-2521-5006', category: '상담진행', isUrgent: false, product: '냉장고', notes: '상담 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
-            { name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '관리자 본인 기록용 카드', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() }
+            { id: 'fixed-1', name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', isUrgent: true, product: '에어컨', notes: '오늘 연락 필수!', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-2', name: '조수진', phone: '010-4416-8488', category: '상담진행', isUrgent: false, product: '혼수', notes: '박정근 담당', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-3', name: '장성필', phone: '010-4553-6113', category: '상담진행', isUrgent: false, product: '냉장고', notes: '견적 요청 / 결정 대기', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-4', name: '김민규', phone: '010-2646-7785', category: '미연락', isUrgent: false, product: '에어컨', notes: '이사 가전 상담 예정', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-5', name: '박정권', phone: '010-9107-5798', category: '상담진행', isUrgent: false, product: '미지정', notes: '주요 고객님 상담 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-6', name: '차은주', phone: '010-4875-9936', category: '상담진행', isUrgent: false, product: '식기세척기', notes: '설치 환경 확인 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-7', name: '최진우', phone: '010-3814-7221', category: '미연락', isUrgent: false, product: '티비', notes: '75인치 모델 문의', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-8', name: '최나임', phone: '010-3091-4080', category: '상담진행', isUrgent: true, product: '인덕션', notes: '조건 최종 조율 중 (긴급)', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-9', name: '임수정', phone: '010-2521-5006', category: '상담진행', isUrgent: false, product: '냉장고', notes: '상담 중', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'fixed-10', name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', isUrgent: true, product: '미지정', notes: '본인 기록용 카드', updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() }
         ];
 
         window.checkPassword = function() {
@@ -318,10 +316,12 @@
             else { const idx = customers.findIndex(c => c.id === id); if (idx !== -1) { customers[idx][field] = value; customers[idx].updatedAt = ts; saveToStorage(); render(); } }
         };
 
+        // [긴급 토글 로직 수정] 확실한 해제를 위해 명시적 참/거짓 부여
         window.toggleUrgent = async (id) => {
             const c = customers.find(item => item.id === id);
             if (!c) return;
-            await fastUpdate(id, 'isUrgent', !c.isUrgent);
+            const currentState = c.isUrgent === true; // 확실하게 boolean 체크
+            await fastUpdate(id, 'isUrgent', !currentState);
         };
 
         const smartSaveOrUpdate = async (data) => {
@@ -356,16 +356,15 @@
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'customers'), async (snapshot) => {
                 if (snapshot.empty) {
                     for (const item of recoveryList) {
-                        const id = Date.now().toString() + Math.random().toString(36).substr(2, 4);
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), item);
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', item.id), item);
                     }
                 } else { customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); render(); }
                 document.getElementById('loading-screen').style.display = 'none';
             });
         };
 
-        const useLocalStorage = () => { customers = JSON.parse(localStorage.getItem('crm_v62_s')) || recoveryList; render(); document.getElementById('loading-screen').style.display = 'none'; };
-        const saveToStorage = () => localStorage.setItem('crm_v62_s', JSON.stringify(customers));
+        const useLocalStorage = () => { customers = JSON.parse(localStorage.getItem('crm_v63_s')) || recoveryList; render(); document.getElementById('loading-screen').style.display = 'none'; };
+        const saveToStorage = () => localStorage.setItem('crm_v63_s', JSON.stringify(customers));
 
         // 5. 렌더링 엔진 (긴급 최상단 고정 로직)
         window.render = function() {
@@ -376,7 +375,7 @@
             
             // 통계
             categories.forEach(cat => { document.getElementById(`stat-${cat}`).innerText = customers.filter(c => c.category === cat).length; });
-            document.getElementById('stat-urgent').innerText = customers.filter(c => c.isUrgent).length;
+            document.getElementById('stat-urgent').innerText = customers.filter(c => c.isUrgent === true).length;
 
             let filtered = [];
             if (currentCategory === '전체') filtered = customers;
@@ -390,8 +389,8 @@
 
             // [정렬] 긴급 우선 + 정렬 기준
             filtered.sort((a, b) => {
-                const aU = a.isUrgent ? 0 : 1;
-                const bU = b.isUrgent ? 0 : 1;
+                const aU = a.isUrgent === true ? 0 : 1;
+                const bU = b.isUrgent === true ? 0 : 1;
                 if (aU !== bU) return aU - bU;
                 if (sortMode === 'update') return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
                 if (sortMode === 'contact') return new Date(a.nextContactDate || '9999-12-31') - new Date(b.nextContactDate || '9999-12-31');
@@ -403,24 +402,25 @@
             container.innerHTML = '';
 
             filtered.forEach(c => {
+                const isUrgent = c.isUrgent === true;
                 const cleanPhone = (c.phone || '').replace(/[^0-9]/g,'');
                 const pOpts = products.map(p => `<option value="${p}" ${c.product === p ? 'selected' : ''}>${p}</option>`).join('');
                 const cOpts = categories.map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
 
                 container.innerHTML += `
-                    <div class="bg-white p-3.5 rounded-[24px] border ${c.isUrgent ? 'urgent-card' : 'border-slate-100'} shadow-sm active:scale-[0.99] transition-all">
+                    <div class="bg-white p-3.5 rounded-[24px] border ${isUrgent ? 'urgent-card' : 'border-slate-100'} shadow-sm active:scale-[0.99] transition-all">
                         <div class="flex justify-between items-center mb-2">
                             <div class="flex items-center gap-2 flex-1 overflow-hidden">
                                 <div class="overflow-hidden">
                                     <h4 class="font-black text-slate-800 text-base leading-tight truncate">
-                                        ${c.name} ${c.isUrgent ? '<i class="fa-solid fa-fire-flame-curved text-red-500 ml-0.5 animate-pulse"></i>' : ''}
+                                        ${c.name} ${isUrgent ? '<i class="fa-solid fa-fire-flame-curved text-red-500 ml-0.5 animate-pulse"></i>' : ''}
                                     </h4>
                                     <p class="text-[10px] font-bold text-slate-300 font-mono tracking-tighter">${formatPhone(c.phone || 'no phone')}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 ml-2">
                                 <button onclick="toggleUrgent('${c.id}')" 
-                                    class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] shadow-sm transition-all ${c.isUrgent ? 'urgent-btn-active' : 'bg-slate-50 text-slate-400 active-scale'}">
+                                    class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] shadow-sm transition-all ${isUrgent ? 'urgent-btn-active' : 'bg-slate-50 text-slate-400 active-scale'}">
                                     <i class="fa-solid fa-bell"></i>
                                 </button>
                                 <select onchange="fastUpdate('${c.id}', 'category', this.value)" class="direct-select category-direct-select">${cOpts}</select>
@@ -432,7 +432,7 @@
 
                         <div class="flex flex-wrap gap-1.5 mb-2 items-center text-[8px] font-black text-slate-300 uppercase">
                             <span><i class="fa-solid fa-clock mr-0.5"></i> ${new Date(c.updatedAt || Date.now()).toLocaleDateString()}</span>
-                            ${c.nextContactDate ? `<span class="text-red-500 bg-red-50 px-2 py-0.5 rounded-full">D-DAY: ${c.nextContactDate}</span>` : ''}
+                            ${c.nextContactDate ? `<span class="text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">D-DAY: ${c.nextContactDate}</span>` : ''}
                         </div>
 
                         <div class="bg-slate-50/60 rounded-xl p-2.5 mb-3 border border-slate-50 shadow-inner overflow-hidden">
@@ -453,7 +453,7 @@
         // 6. 삭제 제어 핸들러
         window.requestDelete = (id) => {
             const c = customers.find(item => item.id === id); 
-            if (c.isUrgent) return alert("긴급 해제 후 삭제 가능합니다.");
+            if (c && c.isUrgent === true) return alert("긴급 해제 후 삭제 가능합니다.");
             deletingId = id;
             document.getElementById('deleteModal').classList.remove('hidden');
             document.getElementById('deleteModal').classList.add('flex');
