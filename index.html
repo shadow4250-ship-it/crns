@@ -1,346 +1,457 @@
-```react
-import React, { useState, useEffect, useMemo } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInAnonymously, 
-  signInWithCustomToken, 
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  setDoc,
-  deleteDoc, 
-  onSnapshot,
-  getDoc
-} from 'firebase/firestore';
-import { 
-  Phone, 
-  MessageSquare, 
-  Search, 
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Mic, 
-  X, 
-  AlertCircle,
-  Database,
-  RefreshCw,
-  CheckCircle2,
-  Loader2
-} from 'lucide-react';
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CRM Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .active-scale:active { transform: scale(0.95); transition: 0.1s; }
+        
+        .theme-전체 { --theme-color: #475569; }
+        .theme-긴급 { --theme-color: #ef4444; }
+        .theme-미연락 { --theme-color: #f59e0b; }
+        .theme-상담진행 { --theme-color: #3b82f6; }
+        .theme-사은품 { --theme-color: #10b981; }
+        
+        .tab-active { color: var(--theme-color); border-bottom: 3px solid var(--theme-color); font-weight: 900; }
+        .tab-inactive { color: #cbd5e1; border-bottom: 3px solid transparent; }
 
-// 1. Firebase 초기 설정 (시스템 변수 활용)
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-final-v100';
-
-const App = () => {
-  // --- 상태 관리 ---
-  const [user, setUser] = useState(null);
-  const [customers, setCustomers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [currentCategory, setCurrentCategory] = useState('전체');
-  const [formData, setFormData] = useState({ name: '', phone: '', status: '미연락', notes: '' });
-
-  // --- 고정 명단 (데이터 유실 대비) ---
-  const defaultList = [
-    { name: '에어컨 신규', phone: '010-2985-0955', status: '긴급', notes: '시스템에어컨 희망 / 5월 15일까지 연락 필수', updatedAt: new Date().toISOString() },
-    { name: '조수진', phone: '010-4416-8488', status: '상담진행', notes: '혼수 가전 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
-    { name: '김민규', phone: '010-2646-7785', status: '미연락', notes: '이사 가전 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
-    { name: '최진우', phone: '010-3814-7221', status: '미연락', notes: '에어컨 단품 문의 / 박정근 담당', updatedAt: new Date().toISOString() },
-    { name: '장성필', phone: '010-4553-6113', status: '상담진행', notes: '시스템 에어컨 전체 견적 / 박정근 담당', updatedAt: new Date().toISOString() },
-    { name: '임수정', phone: '010-2521-5006', status: '상담진행', notes: '냉장고 교체 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
-    { name: '박정권', phone: '010-9107-5798', status: '상담진행', notes: '주요 상담 고객님', updatedAt: new Date().toISOString() },
-    { name: '차은주', phone: '010-4875-9936', status: '상담진행', notes: '5실 이상 상담 건', updatedAt: new Date().toISOString() },
-    { name: '최나임', phone: '010-3091-4080', status: '상담진행', notes: '거실+안방1 구조 확인', updatedAt: new Date().toISOString() },
-    { name: '박정근(담당)', phone: '010-0000-0000', status: '상담진행', notes: '시스템 관리용 카드', updatedAt: new Date().toISOString() }
-  ];
-
-  // 2. 인증 처리 (RULE 3 준수)
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
+        .category-quick-select { 
+            background: #f1f5f9; border-radius: 8px; padding: 4px 8px; font-weight: 800; 
+            color: #475569; appearance: none; outline: none; border: 1px solid #e2e8f0; 
+            text-align: center; font-size: 11px; cursor: pointer;
         }
-      } catch (err) {
-        console.error("Auth Fail:", err);
-      }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setUser);
 
-    // [핵심] 로딩 멈춤 방지: 3초 후 강제 로딩 해제
-    const timer = setTimeout(() => {
-      setLoading(false);
-      if (customers.length === 0) setCustomers(defaultList);
-    }, 3000);
+        .urgent-card { border: 2px solid #ef4444 !important; background-color: #fffafb !important; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12); }
+        .urgent-tag { background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; margin-right: 4px; }
+        
+        .memo-box { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); text-align: left; }
+        .loading-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-24 select-none theme-전체">
 
-    return () => { unsubscribe(); clearTimeout(timer); };
-  }, []);
-
-  // 3. 데이터 실시간 동기화 (RULE 1 & 2 준수)
-  useEffect(() => {
-    if (!user) return;
-
-    const customersRef = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
-    
-    const unsubscribe = onSnapshot(customersRef, async (snapshot) => {
-      if (snapshot.empty) {
-        // 클라우드가 비어있으면 초기 10인방 즉시 복구
-        for (const item of defaultList) {
-          const id = item.phone || 'id-' + Math.random();
-          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), item, { merge: true });
-        }
-      } else {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setCustomers(data.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)));
-        setLoading(false);
-      }
-    }, (error) => {
-      console.error("Firestore Permission Error:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  // --- 주요 기능 ---
-  const handleCall = (phone) => window.location.href = `tel:${phone.replace(/-/g, '')}`;
-  const handleSms = (phone) => window.location.href = `sms:${phone.replace(/-/g, '')}`;
-
-  const saveCustomer = async () => {
-    if (!formData.name || !formData.phone) return alert("성함과 번호는 필수입니다.");
-    
-    const phone = formData.phone.toString().replace(/[^0-9]/g, '');
-    const finalPhone = phone.length === 8 ? '010' + phone : phone;
-    const targetId = editingId || finalPhone;
-    
-    try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', targetId);
-      const existingDoc = await getDoc(docRef);
-      const existing = existingDoc.exists() ? existingDoc.data() : null;
-
-      const payload = {
-        ...formData,
-        phone: finalPhone,
-        notes: (existing && !editingId && formData.notes && formData.notes !== existing.notes) 
-               ? `[추가] ${formData.notes}\n---\n${existing.notes}` 
-               : (formData.notes || (existing ? existing.notes : '')),
-        updatedAt: new Date().toISOString()
-      };
-
-      await setDoc(docRef, payload, { merge: true });
-      closeModal();
-    } catch (e) {
-      alert("데이터 저장 권한이 없습니다.");
-    }
-  };
-
-  const deleteCustomer = async (id) => {
-    if (window.confirm("정말 삭제할까요?")) {
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id));
-    }
-  };
-
-  const openModal = (c = null) => {
-    if (c) {
-      setEditingId(c.id);
-      setFormData({ name: c.name, phone: c.phone, status: c.status, notes: c.notes });
-    } else {
-      setEditingId(null);
-      setFormData({ name: '', phone: '', status: '미연락', notes: '' });
-    }
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => setIsModalOpen(false);
-
-  // --- 필터링 및 렌더링 준비 ---
-  const filteredCustomers = useMemo(() => {
-    let result = customers;
-    if (currentCategory === '긴급') result = customers.filter(c => c.status === '긴급');
-    else if (currentCategory !== '전체') result = customers.filter(c => c.status === currentCategory);
-
-    return result.filter(c => 
-      (c.name || '').includes(searchTerm) || (c.phone || '').includes(searchTerm)
-    );
-  }, [customers, searchTerm, currentCategory]);
-
-  const stats = useMemo(() => ({
-    total: customers.length,
-    urgent: customers.filter(c => c.status === '긴급').length,
-    wait: customers.filter(c => c.status === '미연락').length,
-    consult: customers.filter(c => c.status === '상담진행').length,
-    gift: customers.filter(c => c.status === '사은품').length
-  }), [customers]);
-
-  // 로딩 인디케이터
-  if (loading && customers.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-white">
-        <Loader2 className="animate-spin text-slate-900 mb-4" size={40} />
-        <p className="text-slate-400 font-black text-xs uppercase tracking-widest animate-pulse">Connecting to Park CRM...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 select-none">
-      {/* 헤더 */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 p-5 flex justify-between items-center shadow-sm">
-        <div>
-          <h1 className="text-2xl font-black tracking-tighter text-slate-800 italic uppercase leading-none">PARK CRM</h1>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cloud Sync Stable</p>
-        </div>
-        <button onClick={() => openModal()} className="bg-slate-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all">
-          <Plus size={24} />
-        </button>
-      </header>
-
-      {/* 통계 요약 */}
-      <div className="px-4 pt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        {[
-          { label: 'Urgent', count: stats.urgent, color: 'text-red-500' },
-          { label: 'Wait', count: stats.wait, color: 'text-orange-500' },
-          { label: 'Consult', count: stats.consult, color: 'text-blue-500' },
-          { label: 'Gift', count: stats.gift, color: 'text-green-500' }
-        ].map(item => (
-          <div key={item.label} className="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
-            <p className={`text-[7px] font-black uppercase ${item.color}`}>{item.label}</p>
-            <p className="text-base font-black text-slate-800">{item.count}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* 탭 전환 */}
-      <nav className="sticky top-[69px] z-30 bg-white border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar mt-2">
-        {['전체', '긴급', '미연락', '상담진행', '사은품'].map(cat => (
-          <button 
-            key={cat} 
-            onClick={() => setCurrentCategory(cat)}
-            className={`flex-none px-5 py-4 text-xs font-black tracking-tighter transition-all ${
-              currentCategory === cat ? 'text-slate-900 border-b-2 border-slate-900' : 'text-slate-300 border-b-2 border-transparent'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </nav>
-
-      {/* 검색창 */}
-      <main className="max-w-xl mx-auto p-4 space-y-4">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-          <input 
-            type="text" 
-            placeholder="이름 또는 전화번호 빠른 검색..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[22px] focus:outline-none shadow-sm font-bold text-sm"
-          />
-        </div>
-
-        {/* 리스트 출력 */}
-        <div className="space-y-4 pt-2">
-          {filteredCustomers.length === 0 ? (
-            <div className="py-20 text-center text-slate-300 font-bold text-sm italic uppercase tracking-widest opacity-40">
-              No Data Displayed
+    <!-- [1] 보안 화면 (PIN: 7604) -->
+    <div id="lock-screen" class="fixed inset-0 z-[300] bg-white flex flex-col items-center justify-center p-6 transition-all duration-300">
+        <div class="w-full max-w-[260px] text-center space-y-10">
+            <div class="space-y-1">
+                <h1 class="text-5xl font-black tracking-tighter text-slate-900 leading-none uppercase italic">CRM</h1>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Fast & Secure</p>
             </div>
-          ) : (
-            filteredCustomers.map(c => (
-              <div key={c.id} className={`bg-white border ${c.status === '긴급' ? 'border-red-100 ring-1 ring-red-50' : 'border-slate-100'} rounded-[36px] p-6 shadow-sm`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 className="font-black text-slate-800 text-lg leading-tight mb-1 flex items-center gap-1">
-                      {c.name} {c.status === '긴급' && <AlertCircle size={14} className="text-red-500 animate-pulse"/>}
-                    </h4>
-                    <p className="text-[11px] font-bold text-slate-400 font-mono tracking-tight">{c.phone}</p>
-                  </div>
-                  <div className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase border ${
-                    c.status === '긴급' ? 'bg-red-50 text-red-500 border-red-100' : 'bg-slate-50 text-slate-400 border-slate-100'
-                  }`}>
-                    {c.status}
-                  </div>
-                </div>
-
-                <div className="bg-slate-50/50 rounded-2xl p-5 mb-5 text-[13px] text-slate-600 font-medium italic leading-relaxed text-left">
-                  "{c.notes || '메모가 없습니다.'}"
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button onClick={() => handleCall(c.phone)} className="flex-1 h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs active:scale-95 transition-all shadow-md">
-                    <Phone size={14} /> 통화
-                  </button>
-                  <button onClick={() => handleSms(c.phone)} className="flex-1 h-11 bg-white border border-slate-200 text-slate-700 rounded-2xl flex items-center justify-center gap-2 font-black text-xs active:scale-95 transition-all shadow-sm">
-                    <MessageSquare size={14} /> 문자
-                  </button>
-                  <button onClick={() => openModal(c)} className="w-11 h-11 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center active:scale-95">
-                    <Edit3 size={16} />
-                  </button>
-                  <button onClick={() => deleteCustomer(c.id)} className="w-11 h-11 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center active:scale-95 hover:text-red-400">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+            <div class="space-y-4">
+                <input type="password" id="passwordInput" inputmode="numeric" autofocus maxlength="4"
+                    onkeydown="if(event.key==='Enter') checkPassword()"
+                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-[28px] py-6 text-center text-4xl font-black outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner" 
+                    placeholder="••••">
+                <button onclick="checkPassword()" 
+                    class="w-full bg-slate-900 text-white py-5 rounded-[28px] font-black active-scale shadow-2xl text-lg uppercase tracking-wider">접속하기</button>
+            </div>
+            <p id="password-error" class="hidden text-red-500 text-xs font-bold animate-pulse">암호가 올바르지 않습니다.</p>
         </div>
-      </main>
-
-      {/* 모달 창 */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[110] bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
-          <div className="p-5 border-b flex justify-between items-center bg-slate-50/50">
-            <button onClick={closeModal} className="p-2 text-slate-400"><X size={28} /></button>
-            <h2 className="font-black text-lg text-slate-800 uppercase italic tracking-tight">{editingId ? 'Edit Customer' : 'Add New'}</h2>
-            <button onClick={saveCustomer} className="text-blue-600 font-black px-4">저장</button>
-          </div>
-          <div className="p-6 space-y-6 overflow-y-auto pb-40">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Name</label>
-                <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white outline-none font-black text-sm" placeholder="성함" />
-              </div>
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
-                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold appearance-none">
-                  <option value="미연락">미연락</option>
-                  <option value="상담진행">상담진행</option>
-                  <option value="사은품">사은품</option>
-                  <option value="긴급">긴급</option>
-                </select>
-              </div>
-            </div>
-            <div className="space-y-1.5 text-left">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone</label>
-              <input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white outline-none font-bold font-mono text-sm" placeholder="010-0000-0000" />
-            </div>
-            <div className="space-y-1.5 text-left">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Notes</label>
-              <textarea rows="8" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[32px] resize-none text-sm italic outline-none focus:bg-white leading-relaxed" placeholder="상담 내용을 입력하세요." />
-            </div>
-          </div>
-          <div className="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-slate-100">
-            <button onClick={saveCustomer} className="w-full py-5 bg-slate-900 text-white rounded-[26px] font-black shadow-xl active:scale-95 transition-all">데이터 클라우드 실시간 동기화</button>
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
 
-export default App;
+    <!-- [2] 메인 앱 컨테이너 -->
+    <div id="main-app" class="hidden">
+        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 p-4 px-5 flex justify-between items-center shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center font-black italic shadow-lg">C</div>
+                <h1 class="text-xl font-black tracking-tighter uppercase italic text-slate-900">CRM</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="sync-status" class="text-[9px] font-black text-slate-300 italic uppercase">Connecting...</div>
+                <button onclick="openModal()" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg active-scale">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 상단 현황 -->
+        <div class="px-4 pt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-red-500 uppercase">Emergency</p>
+                <p id="stat-urgent" class="text-base font-black text-slate-800">0</p>
+            </div>
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-orange-500 uppercase">Wait</p>
+                <p id="stat-미연락" class="text-base font-black text-slate-800">0</p>
+            </div>
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-blue-500 uppercase">Active</p>
+                <p id="stat-상담진행" class="text-base font-black text-slate-800">0</p>
+            </div>
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-green-500 uppercase">Gift</p>
+                <p id="stat-사은품" class="text-base font-black text-slate-800">0</p>
+            </div>
+        </div>
+
+        <!-- 탭 필터 -->
+        <nav class="sticky top-[69px] z-30 bg-white border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar">
+            <button onclick="setCategory('전체')" id="tab-전체" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active">전체</button>
+            <button onclick="setCategory('긴급')" id="tab-긴급" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">긴급관리</button>
+            <button onclick="setCategory('미연락')" id="tab-미연락" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">미연락</button>
+            <button onclick="setCategory('상담진행')" id="tab-상담진행" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">상담진행</button>
+            <button onclick="setCategory('사은품')" id="tab-사은품" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">사은품</button>
+        </nav>
+
+        <!-- 명단 리스트 -->
+        <main class="max-w-xl mx-auto p-3 space-y-4">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                <input type="text" id="searchInput" oninput="render()" placeholder="이름, 번호, 품목 통합 검색..." 
+                    class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-[18px] focus:outline-none shadow-sm text-sm font-bold">
+            </div>
+            
+            <div class="flex items-center justify-between px-1">
+                <div class="flex gap-1.5 overflow-x-auto no-scrollbar">
+                    <select id="sortFilter" onchange="render()" class="bg-white border border-slate-200 rounded-full px-3 py-1.5 text-[10px] font-black text-slate-600 outline-none shadow-sm min-w-[100px]">
+                        <option value="update">최신 수정순</option>
+                        <option value="product">품목별 정렬</option>
+                        <option value="name">이름순</option>
+                    </select>
+                </div>
+                <span id="totalBadge" class="text-[9px] font-black text-slate-400 bg-white border border-slate-100 px-3 py-1.5 rounded-full shadow-inner ml-2 flex-none">0 명</span>
+            </div>
+
+            <div id="customerList" class="space-y-4 min-h-[500px]">
+                <!-- JS로 데이터 삽입 -->
+            </div>
+        </main>
+    </div>
+
+    <!-- 상세 입력 모달 -->
+    <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col animate-in slide-in-from-bottom duration-300">
+        <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+            <button onclick="closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 데이터 상세</h2>
+            <button id="saveBtn" onclick="saveCustomer()" class="text-blue-600 font-black px-4 text-lg">완료</button>
+        </div>
+        <div class="p-5 space-y-6 overflow-y-auto pb-60 no-scrollbar text-left">
+            <!-- AI 스마트 입력 -->
+            <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100 space-y-3 shadow-sm">
+                <div class="flex justify-between items-center text-blue-600 font-black text-[11px] uppercase tracking-widest">
+                    <span><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 텍스트 분류</span>
+                    <span id="ai-loading" class="hidden animate-pulse">분석 중...</span>
+                </div>
+                <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-20 shadow-inner" placeholder="예: 홍길동 01012345678 에어컨 상담했음"></textarea>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="startVoiceToSmart()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3.5 text-xs font-black active-scale flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-microphone"></i> 음성 인식</button>
+                    <button onclick="processSmartInput()" class="bg-blue-600 text-white rounded-xl py-3.5 text-xs font-black shadow-lg active-scale">분류 저장</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">성함 (필수)</label>
+                    <input id="formName" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:bg-white shadow-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">업무 단계</label>
+                    <select id="formCategory" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none bg-white shadow-sm">
+                        <option value="미연락">미연락</option>
+                        <option value="상담진행">상담진행</option>
+                        <option value="사은품">사은품</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-tighter">연락처 (필수)</label>
+                    <input id="formPhone" type="tel" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-base outline-none focus:bg-white shadow-sm" placeholder="번호 입력">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">품목</label>
+                    <select id="formProduct" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm appearance-none bg-white shadow-sm">
+                        <option value="미지정">미지정</option>
+                        <option value="티비">티비</option>
+                        <option value="냉장고">냉장고</option>
+                        <option value="에어컨">에어컨</option>
+                        <option value="혼수 가전">혼수 가전</option>
+                        <option value="인덕션">인덕션</option>
+                        <option value="식기세척기">식기세척기</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">상담 상세 메모</label>
+                <textarea id="formNotes" rows="8" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-base font-semibold outline-none focus:bg-white shadow-inner" placeholder="내용을 입력하세요."></textarea>
+            </div>
+        </div>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 shadow-2xl">
+            <button onclick="saveCustomer()" class="w-full py-5 bg-slate-900 text-white rounded-3xl font-black shadow-lg text-base active-scale uppercase tracking-widest">데이터 실시간 저장</button>
+        </div>
+    </div>
+
+    <!-- 삭제 모달 -->
+    <div id="deleteModal" class="fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6 transition-all">
+        <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl scale-in">
+            <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-trash-can text-xl"></i></div>
+            <h3 class="text-lg font-black text-slate-800 mb-2">데이터를 삭제할까요?</h3>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeDeleteModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs">취소</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-black text-xs active-scale">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const masterPIN = "7604";
+        const apiKey = ""; 
+        const firebaseConfig = JSON.parse(__firebase_config || '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-final-v110';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let db, auth;
+        let customers = [];
+        let editingId = null;
+        let currentCategory = '전체';
+        let deletingId = null;
+
+        const categoriesList = ['미연락', '상담진행', '사은품'];
+
+        // [기본 데이터]
+        const seedData = [
+            { name: '박정권', phone: '01091075798', category: '상담진행', product: '미지정', notes: '주요 고객님', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '에어컨 신규', phone: '01029850955', category: '미연락', product: '에어컨', notes: '오늘 연락 필수!', isUrgent: true, updatedAt: new Date().toISOString() },
+            { name: '조수진', phone: '01044168488', category: '상담진행', product: '혼수 가전', notes: '박정근 담당 상담', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '최나임', phone: '01030914080', category: '상담진행', product: '미지정', notes: '긴급 조율', isUrgent: true, updatedAt: new Date().toISOString() },
+            { name: '박정근(담당)', phone: '01000000000', category: '상담진행', product: '미지정', notes: '시스템 관리용', isUrgent: false, updatedAt: new Date().toISOString() }
+        ];
+
+        // 1. 보안 체크
+        window.checkPassword = function() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === masterPIN) {
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('main-app').classList.remove('hidden');
+                initFirebase();
+            } else {
+                document.getElementById('password-error').classList.remove('hidden');
+                document.getElementById('passwordInput').value = "";
+                document.getElementById('passwordInput').focus();
+            }
+        };
+
+        // 2. 파이어베이스 초기화
+        async function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                else await signInAnonymously(auth);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+                        onSnapshot(ref, (snapshot) => {
+                            if (snapshot.empty) {
+                                recoverySeed();
+                            } else {
+                                customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                                document.getElementById('sync-status').innerText = 'Online';
+                                render();
+                            }
+                        });
+                    }
+                });
+            } catch (e) {
+                console.error("Local Mode Active");
+                customers = [...seedData];
+                render();
+            }
+        }
+
+        async function recoverySeed() {
+            for (const item of seedData) {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', item.phone), item, { merge: true });
+            }
+        }
+
+        // 3. 렌더링 엔진 (긴급 상단 고정 & 품목 정렬 로직)
+        window.render = function() {
+            const container = document.getElementById('customerList');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const sortMode = document.getElementById('sortFilter').value;
+            
+            // 통계 집계
+            document.getElementById('stat-미연락').innerText = customers.filter(c => c.category === '미연락').length;
+            document.getElementById('stat-상담진행').innerText = customers.filter(c => c.category === '상담진행').length;
+            document.getElementById('stat-사은품').innerText = customers.filter(c => c.category === '사은품').length;
+            document.getElementById('stat-urgent').innerText = customers.filter(c => c.isUrgent === true).length;
+
+            let filtered = currentCategory === '전체' ? customers : 
+                           (currentCategory === '긴급' ? customers.filter(c => c.isUrgent === true) : 
+                           customers.filter(c => c.category === currentCategory));
+            
+            filtered = filtered.filter(c => 
+                (c.name || '').toLowerCase().includes(search) || 
+                (c.phone || '').includes(search) || 
+                (c.product || '').toLowerCase().includes(search)
+            );
+
+            // [정렬 로직]
+            filtered.sort((a, b) => {
+                // 1순위: 긴급(isUrgent) 건은 무조건 상단 고정
+                const aU = a.isUrgent === true ? 0 : 1;
+                const bU = b.isUrgent === true ? 0 : 1;
+                if (aU !== bU) return aU - bU;
+
+                // 2순위: 선택한 정렬 방식
+                if (sortMode === 'product') {
+                    return (a.product || '미지정').localeCompare(b.product || '미지정');
+                }
+                if (sortMode === 'name') {
+                    return (a.name || '').localeCompare(b.name || '');
+                }
+                return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+            });
+
+            document.getElementById('totalBadge').innerText = `${filtered.length} 명`;
+            container.innerHTML = '';
+
+            filtered.forEach(c => {
+                const isUrgent = c.isUrgent === true;
+                const cOpts = categoriesList.map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
+                
+                container.innerHTML += `
+                    <div class="bg-white p-5 rounded-[32px] border ${isUrgent ? 'urgent-card' : 'border-slate-100'} shadow-sm transition-all active:scale-[0.98]">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-left flex-1 overflow-hidden">
+                                <h4 class="font-black text-slate-800 text-lg truncate flex items-center">
+                                    ${isUrgent ? '<span class="urgent-tag">URGENT</span>' : ''}
+                                    ${c.name}
+                                </h4>
+                                <p class="text-[11px] font-bold text-slate-300 font-mono tracking-tight">${c.phone}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleUrgent('${c.id || c.phone}')" class="w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-all ${isUrgent ? 'bg-red-500 text-white' : 'bg-slate-50 text-slate-300 active-scale'}">
+                                    <i class="fa-solid fa-bell text-xs"></i>
+                                </button>
+                                <select onchange="window.fastUpdate('${c.id || c.phone}', 'category', this.value)" class="category-quick-select">
+                                    ${cOpts}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-3 items-center text-[9px] font-black text-slate-400 uppercase">
+                            <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold tracking-tighter">${c.product || '미지정'}</span>
+                            <span><i class="fa-solid fa-clock ml-2 mr-1"></i> ${new Date(c.updatedAt).toLocaleDateString()}</span>
+                        </div>
+                        <div class="memo-box mb-4 shadow-inner">
+                            <p class="text-sm font-semibold text-slate-600 leading-relaxed">${c.notes || '메모 없음'}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="tel:${c.phone}" class="flex-[3] h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline active:scale-95 shadow-md transition-all"><i class="fa-solid fa-phone text-xs"></i> 통화하기</a>
+                            <a href="sms:${c.phone}" class="flex-[3] h-11 bg-white border border-slate-200 text-slate-800 rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline active:scale-95 shadow-sm transition-all"><i class="fa-solid fa-message text-xs text-slate-400"></i> 문자전송</a>
+                            <button onclick="editCustomer('${c.id || c.phone}')" class="flex-1 h-11 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center active:scale-95 transition-all"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="requestDelete('${c.id || c.phone}')" class="flex-1 h-11 bg-slate-50 text-slate-200 rounded-xl flex items-center justify-center active:scale-95 hover:text-red-500 transition-all"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        // 4. 기능 함수들
+        window.saveCustomer = async () => {
+            const name = document.getElementById('formName').value;
+            const phoneInput = document.getElementById('formPhone').value;
+            if (!name || !phoneInput) return alert("필수 정보를 입력하세요.");
+            
+            const phone = phoneInput.replace(/[^0-9]/g, '');
+            const finalPhone = phone.length === 8 ? '010' + phone : phone;
+            const targetId = editingId || finalPhone;
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', targetId);
+            const existingDoc = await getDoc(docRef);
+            const existing = existingDoc.exists() ? existingDoc.data() : null;
+
+            const payload = {
+                name: name.trim(),
+                phone: finalPhone,
+                category: document.getElementById('formCategory').value,
+                product: document.getElementById('formProduct').value,
+                notes: (existing && !editingId && document.getElementById('formNotes').value) 
+                       ? `[추가] ${document.getElementById('formNotes').value}\n---\n${existing.notes}` 
+                       : (document.getElementById('formNotes').value || (existing ? existing.notes : '')),
+                isUrgent: existing ? (existing.isUrgent || false) : false,
+                updatedAt: new Date().toISOString()
+            };
+
+            await setDoc(docRef, payload, { merge: true });
+            closeModal();
+        };
+
+        window.fastUpdate = async (id, field, value) => {
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { [field]: value, updatedAt: new Date().toISOString() }, { merge: true });
+        };
+
+        window.toggleUrgent = async (id) => {
+            const c = customers.find(item => (item.id || item.phone) === id);
+            if (c) {
+                const newUrgent = !(c.isUrgent === true);
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { isUrgent: newUrgent, updatedAt: new Date().toISOString() }, { merge: true });
+            }
+        };
+
+        window.processSmartInput = async () => {
+            const text = document.getElementById('smartInput').value.trim();
+            if (!text) return;
+            document.getElementById('ai-loading').classList.remove('hidden');
+
+            const prompt = `다음 텍스트에서 {name, phone, product, notes}를 추출해 JSON 배열 [{...}]로 답해줘. 번호 8자리면 010 붙여. 품목은 [티비, 냉장고, 에어컨, 혼수 가전, 인덕션, 식기세척기] 중 하나. 텍스트: "${text}"`;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const result = await res.json();
+                const jsonStr = result.candidates[0].content.parts[0].text.match(/\[.*\]/s)[0];
+                const json = JSON.parse(jsonStr);
+                for (const item of json) {
+                    const id = item.phone || 'id-' + Date.now();
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { ...item, category: '미연락', isUrgent: false, updatedAt: new Date().toISOString() }, { merge: true });
+                }
+            } catch (e) { alert("AI 분석 실패"); }
+            document.getElementById('ai-loading').classList.add('hidden');
+            document.getElementById('smartInput').value = "";
+            closeModal();
+        };
+
+        window.startVoiceToSmart = () => {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'ko-KR';
+            recognition.onresult = (event) => {
+                document.getElementById('smartInput').value = event.results[0][0].transcript;
+                processSmartInput();
+            };
+            recognition.start();
+        };
+
+        window.requestDelete = (id) => { deletingId = id; document.getElementById('deleteModal').classList.replace('hidden', 'flex'); };
+        window.closeDeleteModal = () => { document.getElementById('deleteModal').classList.replace('flex', 'hidden'); deletingId = null; };
+        document.getElementById('confirmDeleteBtn').onclick = async () => { if(deletingId) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', deletingId)); closeDeleteModal(); };
+
+        window.setCategory = (cat) => { currentCategory = cat; document.body.className = `pb-24 select-none theme-${cat}`; document.querySelectorAll('nav button').forEach(b => b.className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive'); document.getElementById(`tab-${cat}`).className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active'; render(); };
+        window.openModal = () => document.getElementById('modal').classList.replace('hidden', 'flex');
+        window.closeModal = () => { document.getElementById('modal').classList.replace('flex', 'hidden'); editingId = null; document.getElementById('formName').value=''; document.getElementById('formPhone').value=''; document.getElementById('formNotes').value=''; };
+        window.editCustomer = (id) => { const c = customers.find(c => (c.id || c.phone) === id); if(!c) return; editingId = id; openModal(); document.getElementById('formName').value = c.name; document.getElementById('formPhone').value = c.phone; document.getElementById('formProduct').value = c.product || '미지정'; document.getElementById('formNotes').value = c.notes || ''; document.getElementById('formCategory').value = c.category; };
+    </script>
+</body>
+</html>
 
 ```
