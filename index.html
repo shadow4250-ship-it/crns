@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Pro</title>
+    <title>CRM Pro v3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; color: #1e293b; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .active-scale:active { transform: scale(0.95); transition: 0.1s; }
         
@@ -27,22 +27,26 @@
             text-align: center; font-size: 11px; cursor: pointer;
         }
 
-        .urgent-card { border: 2px solid #ef4444 !important; background-color: #fffafb !important; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12); }
-        .urgent-tag { background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; margin-right: 4px; }
+        .urgent-card { border: 2.5px solid #ef4444 !important; background-color: #fffafb !important; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.15); }
+        .urgent-tag { background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; margin-right: 4px; display: inline-flex; align-items: center; gap: 2px; }
         
-        .memo-box { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); text-align: left; }
+        .memo-box { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); text-align: left; overflow: hidden; }
         .loading-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        #save-toast { display: none; position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 50px; z-index: 500; font-size: 12px; font-weight: bold; }
     </style>
 </head>
 <body class="pb-24 select-none theme-전체">
 
-    <!-- [1] 보안 화면 -->
+    <div id="save-toast">데이터가 안전하게 저장되었습니다.</div>
+
+    <!-- [1] 보안 화면 (7604) -->
     <div id="lock-screen" class="fixed inset-0 z-[300] bg-white flex flex-col items-center justify-center p-6 transition-all duration-300">
         <div class="w-full max-w-[260px] text-center space-y-10">
             <div class="space-y-1">
                 <h1 class="text-5xl font-black tracking-tighter text-slate-900 leading-none uppercase italic">CRM</h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Fast & Secure</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Integrated Management</p>
             </div>
             <div class="space-y-4">
                 <input type="password" id="passwordInput" inputmode="numeric" autofocus maxlength="4"
@@ -52,22 +56,21 @@
                 <button onclick="checkPassword()" 
                     class="w-full bg-slate-900 text-white py-5 rounded-[28px] font-black active-scale shadow-2xl text-lg uppercase tracking-wider">접속하기</button>
             </div>
-            <p id="password-error" class="hidden text-red-500 text-xs font-bold animate-pulse">암호가 올바르지 않습니다.</p>
+            <p id="password-error" class="hidden text-red-500 text-xs font-bold animate-pulse">PIN 번호가 올바르지 않습니다.</p>
         </div>
     </div>
 
-    <!-- [2] 메인 앱 컨테이너 -->
+    <!-- [2] 메인 앱 레이아웃 -->
     <div id="main-app" class="hidden">
         <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 p-4 px-5 flex justify-between items-center shadow-sm">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center font-black italic shadow-lg">C</div>
-                <h1 class="text-xl font-black tracking-tighter uppercase italic text-slate-900">CRM</h1>
+                <h1 class="text-xl font-black tracking-tighter uppercase italic text-slate-900">CRM PRO</h1>
             </div>
             <div class="flex items-center gap-3">
-                <div id="sync-status" class="text-[9px] font-black text-slate-300 italic uppercase">Connecting...</div>
-                <!-- 설정(비밀번호 변경) 버튼 추가 -->
+                <div id="sync-status" class="text-[9px] font-black text-slate-300 italic uppercase">Connecting</div>
                 <button onclick="openSettings()" class="w-10 h-10 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center shadow-sm active-scale">
-                    <i class="fa-solid fa-gear text-lg"></i>
+                    <i class="fa-solid fa-gear"></i>
                 </button>
                 <button onclick="openModal()" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg active-scale">
                     <i class="fa-solid fa-plus text-lg"></i>
@@ -75,27 +78,27 @@
             </div>
         </header>
 
-        <!-- 상단 현황 -->
+        <!-- 상단 실시간 현황 -->
         <div class="px-4 pt-4 flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
-                <p class="text-[7px] font-black text-red-500 uppercase">Emergency</p>
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[80px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-red-500 uppercase tracking-widest">Emergency</p>
                 <p id="stat-urgent" class="text-base font-black text-slate-800">0</p>
             </div>
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
-                <p class="text-[7px] font-black text-orange-500 uppercase">Wait</p>
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[80px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-orange-500 uppercase tracking-widest">Wait</p>
                 <p id="stat-미연락" class="text-base font-black text-slate-800">0</p>
             </div>
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
-                <p class="text-[7px] font-black text-blue-500 uppercase">Active</p>
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[80px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-blue-500 uppercase tracking-widest">Active</p>
                 <p id="stat-상담진행" class="text-base font-black text-slate-800">0</p>
             </div>
-            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[75px] text-center shadow-sm">
-                <p class="text-[7px] font-black text-green-500 uppercase">Gift</p>
+            <div class="bg-white border border-slate-100 rounded-2xl p-3 flex-1 min-w-[80px] text-center shadow-sm">
+                <p class="text-[7px] font-black text-green-500 uppercase tracking-widest">Gift</p>
                 <p id="stat-사은품" class="text-base font-black text-slate-800">0</p>
             </div>
         </div>
 
-        <!-- 탭 필터 -->
+        <!-- 필터 탭 -->
         <nav class="sticky top-[69px] z-30 bg-white border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar">
             <button onclick="setCategory('전체')" id="tab-전체" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active">전체</button>
             <button onclick="setCategory('긴급')" id="tab-긴급" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">긴급관리</button>
@@ -104,28 +107,27 @@
             <button onclick="setCategory('사은품')" id="tab-사은품" class="flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive">사은품</button>
         </nav>
 
-        <!-- 명단 리스트 -->
+        <!-- 명단 리스트 메인 -->
         <main class="max-w-xl mx-auto p-3 space-y-4">
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-                <input type="text" id="searchInput" oninput="render()" placeholder="이름, 번호, 품목 통합 검색..." 
-                    class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-[18px] focus:outline-none shadow-sm text-sm font-bold">
+                <input type="text" id="searchInput" oninput="render()" placeholder="이름, 번호, 품목 검색..." 
+                    class="w-full pl-10 pr-4 py-4 bg-white border border-slate-200 rounded-[20px] focus:outline-none shadow-sm text-sm font-bold">
             </div>
             
             <div class="flex items-center justify-between px-1">
-                <div class="flex gap-1.5 overflow-x-auto no-scrollbar">
+                <div class="flex gap-1.5">
                     <select id="sortFilter" onchange="render()" class="bg-white border border-slate-200 rounded-full px-3 py-1.5 text-[10px] font-black text-slate-600 outline-none shadow-sm min-w-[100px]">
                         <option value="update">최신 수정순</option>
                         <option value="product">품목별 정렬</option>
-                        <option value="name">이름순</option>
+                        <option value="name">이름 가나다순</option>
                     </select>
                 </div>
-                <span id="totalBadge" class="text-[9px] font-black text-slate-400 bg-white border border-slate-100 px-3 py-1.5 rounded-full shadow-inner ml-2 flex-none">0 명</span>
+                <span id="totalBadge" class="text-[9px] font-black text-slate-400 bg-white border border-slate-100 px-3 py-1.5 rounded-full shadow-inner flex-none">0 명</span>
             </div>
 
-            <div id="customerList" class="space-y-4 min-h-[500px]">
-                <!-- JS로 데이터 삽입 -->
-            </div>
+            <!-- 고객 카드 렌더링 영역 -->
+            <div id="customerList" class="space-y-4 min-h-[500px]"></div>
         </main>
     </div>
 
@@ -133,26 +135,26 @@
     <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col animate-in slide-in-from-bottom duration-300">
         <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 데이터 상세</h2>
+            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">상세 정보 관리</h2>
             <button id="saveBtn" onclick="saveCustomer()" class="text-blue-600 font-black px-4 text-lg">완료</button>
         </div>
         <div class="p-5 space-y-6 overflow-y-auto pb-60 no-scrollbar text-left">
-            <!-- AI 스마트 입력 -->
-            <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100 space-y-3 shadow-sm">
+            <!-- AI 스마트 입력 로직 -->
+            <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100 space-y-3">
                 <div class="flex justify-between items-center text-blue-600 font-black text-[11px] uppercase tracking-widest">
-                    <span><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 텍스트 분류</span>
-                    <span id="ai-loading" class="hidden animate-pulse">분석 중...</span>
+                    <span><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 원터치 등록</span>
+                    <span id="ai-loading" class="hidden animate-pulse">분석 및 저장 중...</span>
                 </div>
-                <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-20 shadow-inner" placeholder="예: 홍길동 01012345678 에어컨 상담했음"></textarea>
+                <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-20 shadow-inner" placeholder="예: 홍길동 01012345678 에어컨 상담"></textarea>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="startVoiceToSmart()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3.5 text-xs font-black active-scale flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-microphone"></i> 음성 인식</button>
+                    <button onclick="startVoiceToSmart()" class="bg-white border-2 border-blue-200 text-blue-500 rounded-xl py-3.5 text-xs font-black active-scale flex items-center justify-center gap-2"><i class="fa-solid fa-microphone"></i> 음성 인식</button>
                     <button onclick="processSmartInput()" class="bg-blue-600 text-white rounded-xl py-3.5 text-xs font-black shadow-lg active-scale">분류 저장</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">성함 (필수)</label>
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">고객 성함</label>
                     <input id="formName" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:bg-white shadow-sm">
                 </div>
                 <div class="space-y-1">
@@ -167,12 +169,12 @@
             
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-tighter">연락처 (필수)</label>
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">연락처</label>
                     <input id="formPhone" type="tel" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-base outline-none focus:bg-white shadow-sm" placeholder="번호 입력">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">품목</label>
-                    <select id="formProduct" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm appearance-none bg-white shadow-sm">
+                    <select id="formProduct" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none bg-white shadow-sm">
                         <option value="미지정">미지정</option>
                         <option value="티비">티비</option>
                         <option value="냉장고">냉장고</option>
@@ -194,9 +196,9 @@
         </div>
     </div>
 
-    <!-- 삭제 모달 -->
-    <div id="deleteModal" class="fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6 transition-all">
-        <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl scale-in">
+    <!-- 삭제 확인 모달 -->
+    <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6">
+        <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl scale-in transition-all">
             <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-trash-can text-xl"></i></div>
             <h3 class="text-lg font-black text-slate-800 mb-2">데이터를 삭제할까요?</h3>
             <div class="flex gap-3 mt-6">
@@ -206,15 +208,14 @@
         </div>
     </div>
 
-    <!-- [추가] 설정(비밀번호 변경) 모달 -->
-    <div id="settingsModal" class="fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-sm hidden flex-col items-center justify-center p-6 transition-all">
+    <!-- PIN 설정 변경 모달 -->
+    <div id="settingsModal" class="fixed inset-0 z-[260] bg-slate-900/70 backdrop-blur-sm hidden flex-col items-center justify-center p-6 transition-all">
         <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl">
-            <h3 class="text-lg font-black text-slate-800 mb-2">비밀번호 변경</h3>
-            <p class="text-xs text-slate-500 mb-6">새로운 4자리 숫자를 입력하세요.</p>
-            <input type="password" id="newPinInput" maxlength="4" inputmode="numeric" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 text-center text-2xl font-black outline-none focus:border-blue-500 mb-6" placeholder="••••">
+            <h3 class="text-lg font-black text-slate-800 mb-2">PIN 설정 변경</h3>
+            <input type="password" id="newPinInput" maxlength="4" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 text-center text-2xl font-black outline-none mb-6 shadow-inner" placeholder="새 암호 4자리">
             <div class="flex gap-3">
                 <button onclick="closeSettings()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs">취소</button>
-                <button onclick="saveNewPIN()" class="flex-1 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-xs active-scale">변경 저장</button>
+                <button onclick="saveNewPIN()" class="flex-1 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-xs active-scale">저장</button>
             </div>
         </div>
     </div>
@@ -224,13 +225,11 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // [수정] const 대신 let으로 변경하여 비밀번호 덮어쓰기 허용
+        // ⚙️ 설정 및 고정 명단 (누락 방지용)
         let masterPIN = "7604";
-        
         const apiKey = ""; 
-        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-        const firebaseConfig = JSON.parse(firebaseConfigStr);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-final-v110';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-final-stable-v5';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
@@ -239,40 +238,42 @@
         let currentCategory = '전체';
         let deletingId = null;
 
-        // [기본 데이터]
-        const seedData = [
-            { name: '박정권', phone: '01091075798', category: '상담진행', product: '미지정', notes: '주요 고객님', isUrgent: false, updatedAt: new Date().toISOString() },
-            { name: '에어컨 신규', phone: '01029850955', category: '미연락', product: '에어컨', notes: '오늘 연락 필수!', isUrgent: true, updatedAt: new Date().toISOString() },
-            { name: '조수진', phone: '01044168488', category: '상담진행', product: '혼수 가전', notes: '박정근 담당 상담', isUrgent: false, updatedAt: new Date().toISOString() },
-            { name: '최나임', phone: '01030914080', category: '상담진행', product: '미지정', notes: '긴급 조율', isUrgent: true, updatedAt: new Date().toISOString() },
-            { name: '박정근(담당)', phone: '01000000000', category: '상담진행', product: '미지정', notes: '시스템 관리용', isUrgent: false, updatedAt: new Date().toISOString() }
-        ];
-
         const categoriesList = ['미연락', '상담진행', '사은품'];
 
-        // [수정] DB에서 비밀번호 연동을 위해 초기화 함수 로직 변경 (페이지 로드 시 즉시 실행)
-        async function initFirebase() {
+        // [복구 명단] 기존 고객 10인 완전 고정
+        const seedData = [
+            { name: '박정권', phone: '010-9107-5798', category: '상담진행', product: '미지정', notes: '주요 고객 상담 중', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '조수진', phone: '010-4416-8488', category: '상담진행', product: '혼수 가전', notes: '박정근 담당 상담 중', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '김민규', phone: '010-2646-7785', category: '미연락', product: '에어컨', notes: '이사 가전 상담 예정', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '최진우', phone: '010-3814-7221', category: '미연락', product: '티비', notes: '75인치 모델 문의', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '장성필', phone: '010-4553-6113', category: '상담진행', product: '냉장고', notes: '견적 요청 결정 대기', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '임수정', phone: '010-2521-5006', category: '상담진행', product: '냉장고', notes: '상담 진행 중', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '차은주', phone: '010-4875-9936', category: '상담진행', product: '미지정', notes: '설치 환경 확인 중', isUrgent: false, updatedAt: new Date().toISOString() },
+            { name: '최나임', phone: '010-3091-4080', category: '상담진행', product: '미지정', notes: '긴급 조율 중', isUrgent: true, updatedAt: new Date().toISOString() },
+            { name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', product: '에어컨', notes: '오늘 연락 필수!', isUrgent: true, updatedAt: new Date().toISOString() },
+            { name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', product: '미지정', notes: '시스템 관리 카드', isUrgent: false, updatedAt: new Date().toISOString() }
+        ];
+
+        // 1. 파이어베이스 초기화 및 데이터 로드
+        async function initSystem() {
             try {
+                if(!firebaseConfig.apiKey) return;
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // RULE 3: 인증 선행
                 if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
                 else await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        // DB에서 비밀번호 동기화
-                        try {
-                            const pinDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'settings', 'security'));
-                            if (pinDoc.exists()) {
-                                masterPIN = pinDoc.data().pin;
-                            } else {
-                                // DB에 없으면 기본값으로 최초 생성
-                                await setDoc(doc(db, 'artifacts', appId, 'public', 'settings', 'security'), { pin: "7604" });
-                            }
-                        } catch (e) { console.error("PIN 로드 실패"); }
+                        // 비밀번호 동기화
+                        const pRef = doc(db, 'artifacts', appId, 'public', 'settings', 'security');
+                        const pSnap = await getDoc(pRef);
+                        if (pSnap.exists()) masterPIN = pSnap.data().pin;
 
+                        // 실시간 명단 동기화
                         const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
                         onSnapshot(ref, (snapshot) => {
                             if (snapshot.empty) {
@@ -282,20 +283,18 @@
                                 document.getElementById('sync-status').innerText = 'Online';
                                 render();
                             }
-                        });
+                        }, (err) => console.error("Snapshot Error", err));
                     }
                 });
             } catch (e) {
-                console.error("Local Mode Active");
+                console.error("Local Mode Fallback");
                 customers = [...seedData];
                 render();
             }
         }
 
-        // 스크립트가 로드되자마자 파이어베이스 연결(비밀번호 호출 위해)
-        initFirebase();
+        initSystem();
 
-        // 1. 보안 체크 로직
         window.checkPassword = function() {
             const input = document.getElementById('passwordInput').value;
             if (input === masterPIN) {
@@ -308,33 +307,17 @@
             }
         };
 
-        // [추가] 비밀번호 변경 기능
-        window.openSettings = () => { document.getElementById('settingsModal').classList.replace('hidden', 'flex'); };
-        window.closeSettings = () => { document.getElementById('settingsModal').classList.replace('flex', 'hidden'); document.getElementById('newPinInput').value = ''; };
-        
-        window.saveNewPIN = async () => {
-            const newPin = document.getElementById('newPinInput').value;
-            if(newPin.length !== 4) return alert("4자리 숫자로 입력해주세요.");
-            try {
-                // DB에 새 비밀번호 저장
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'settings', 'security'), { pin: newPin }, { merge: true });
-                masterPIN = newPin; // 로컬 변수 업데이트
-                alert("비밀번호가 성공적으로 변경되었습니다.");
-                closeSettings();
-            } catch(e) {
-                alert("비밀번호 변경에 실패했습니다. (DB 연결 확인 필요)");
-            }
-        };
-
         async function recoverySeed() {
             for (const item of seedData) {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', item.phone), item, { merge: true });
+                const cleanId = item.phone.replace(/[^0-9]/g, '');
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', cleanId), item, { merge: true });
             }
         }
 
-        // 3. 렌더링 엔진
+        // [핵심] 렌더링 엔진: 긴급 건 상단 고정 + 선택 정렬
         window.render = function() {
             const container = document.getElementById('customerList');
+            if (!container) return;
             const search = document.getElementById('searchInput').value.toLowerCase();
             const sortMode = document.getElementById('sortFilter').value;
             
@@ -353,11 +336,14 @@
                 (c.product || '').toLowerCase().includes(search)
             );
 
+            // [정렬 로직]
             filtered.sort((a, b) => {
+                // 1순위: 긴급(Urgent)은 무조건 위로
                 const aU = a.isUrgent === true ? 0 : 1;
                 const bU = b.isUrgent === true ? 0 : 1;
                 if (aU !== bU) return aU - bU;
 
+                // 2순위: 선택 정렬
                 if (sortMode === 'product') return (a.product || '미지정').localeCompare(b.product || '미지정');
                 if (sortMode === 'name') return (a.name || '').localeCompare(b.name || '');
                 return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
@@ -375,66 +361,91 @@
                         <div class="flex justify-between items-center mb-3">
                             <div class="text-left flex-1 overflow-hidden">
                                 <h4 class="font-black text-slate-800 text-lg truncate flex items-center">
-                                    ${isUrgent ? '<span class="urgent-tag">URGENT</span>' : ''}
+                                    ${isUrgent ? '<span class="urgent-tag"><i class="fa-solid fa-fire"></i>긴급</span>' : ''}
                                     ${c.name}
                                 </h4>
                                 <p class="text-[11px] font-bold text-slate-300 font-mono tracking-tight">${c.phone}</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button onclick="toggleUrgent('${c.id || c.phone}')" class="w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-all ${isUrgent ? 'bg-red-500 text-white' : 'bg-slate-50 text-slate-300 active-scale'}">
+                                <button onclick="toggleUrgent('${c.id || c.phone.replace(/[^0-9]/g, '')}')" class="w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-all ${isUrgent ? 'bg-red-500 text-white' : 'bg-slate-50 text-slate-300 active-scale'}">
                                     <i class="fa-solid fa-bell text-xs"></i>
                                 </button>
-                                <select onchange="window.fastUpdate('${c.id || c.phone}', 'category', this.value)" class="category-quick-select">
+                                <select onchange="window.fastUpdate('${c.id || c.phone.replace(/[^0-9]/g, '')}', 'category', this.value)" class="category-quick-select">
                                     ${cOpts}
                                 </select>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 mb-3 items-center text-[9px] font-black text-slate-400 uppercase">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold tracking-tighter">${c.product || '미지정'}</span>
+                            <span class="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600 font-bold">${c.product || '미지정'}</span>
                             <span><i class="fa-solid fa-clock ml-2 mr-1"></i> ${new Date(c.updatedAt).toLocaleDateString()}</span>
                         </div>
                         <div class="memo-box mb-4 shadow-inner">
                             <p class="text-sm font-semibold text-slate-600 leading-relaxed">${c.notes || '메모 없음'}</p>
                         </div>
                         <div class="flex gap-2">
-                            <a href="tel:${c.phone}" class="flex-[3] h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline active:scale-95 shadow-md transition-all"><i class="fa-solid fa-phone text-xs"></i> 통화하기</a>
-                            <a href="sms:${c.phone}" class="flex-[3] h-11 bg-white border border-slate-200 text-slate-800 rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline active:scale-95 shadow-sm transition-all"><i class="fa-solid fa-message text-xs text-slate-400"></i> 문자전송</a>
-                            <button onclick="editCustomer('${c.id || c.phone}')" class="flex-1 h-11 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center active:scale-95 transition-all"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="requestDelete('${c.id || c.phone}')" class="flex-1 h-11 bg-slate-50 text-slate-200 rounded-xl flex items-center justify-center active:scale-95 hover:text-red-500 transition-all"><i class="fa-solid fa-trash-can"></i></button>
+                            <a href="tel:${c.phone}" class="flex-[3] h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline active:scale-95 shadow-md"><i class="fa-solid fa-phone text-xs"></i> 통화</a>
+                            <a href="sms:${c.phone}" class="flex-[3] h-11 bg-white border border-slate-200 text-slate-800 rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline active:scale-95 shadow-sm"><i class="fa-solid fa-message text-xs text-slate-400"></i> 문자</a>
+                            <button onclick="editCustomer('${c.id || c.phone.replace(/[^0-9]/g, '')}')" class="flex-1 h-11 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center active:scale-95"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="requestDelete('${c.id || c.phone.replace(/[^0-9]/g, '')}')" class="flex-1 h-11 bg-slate-50 text-slate-200 rounded-xl flex items-center justify-center active:scale-95 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
                 `;
             });
         };
 
-        // 4. 기능 함수들
-        window.saveCustomer = async () => {
-            const name = document.getElementById('formName').value;
-            const phoneInput = document.getElementById('formPhone').value;
-            if (!name || !phoneInput) return alert("필수 정보를 입력하세요.");
+        // [통합 저장 엔진] 신규 데이터 저장 실패 완전 해결
+        window.secureSave = async (data) => {
+            if (!auth?.currentUser) return false;
             
-            const phone = phoneInput.replace(/[^0-9]/g, '');
-            const finalPhone = phone.length === 8 ? '010' + phone : phone;
-            const targetId = editingId || finalPhone;
+            const rawPhone = data.phone.toString();
+            const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+            const finalPhone = cleanPhone.length === 8 ? '010' + cleanPhone : cleanPhone;
+            
+            // 번호를 고유 문서 ID로 고정 (중복 누락 방지 핵심)
+            const docId = data.id || finalPhone;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', docId);
 
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', targetId);
-            const existingDoc = await getDoc(docRef);
-            const existing = existingDoc.exists() ? existingDoc.data() : null;
+            try {
+                const existingSnap = await getDoc(docRef);
+                const existing = existingSnap.exists() ? existingSnap.data() : null;
 
-            const payload = {
-                name: name.trim(),
-                phone: finalPhone,
+                const payload = {
+                    name: data.name || (existing ? existing.name : "신규"),
+                    phone: finalPhone || (existing ? existing.phone : ""),
+                    category: data.category || (existing ? existing.category : '미연락'),
+                    product: data.product || (existing ? existing.product : '미지정'),
+                    notes: (existing && !editingId && data.notes && data.notes !== existing.notes) 
+                           ? `[추가] ${data.notes}\n---\n${existing.notes}` 
+                           : (data.notes || (existing ? existing.notes : '')),
+                    isUrgent: data.isUrgent !== undefined ? data.isUrgent : (existing ? existing.isUrgent : false),
+                    updatedAt: new Date().toISOString()
+                };
+
+                await setDoc(docRef, payload, { merge: true });
+                showToast();
+                return true;
+            } catch (e) {
+                console.error("Save Failed:", e);
+                return false;
+            }
+        };
+
+        window.saveCustomer = async () => {
+            const name = document.getElementById('formName').value.trim();
+            const phone = document.getElementById('formPhone').value.trim();
+            if (!name || !phone) return alert("성함과 연락처는 필수입니다.");
+            
+            const success = await window.secureSave({
+                id: editingId,
+                name: name,
+                phone: phone,
                 category: document.getElementById('formCategory').value,
                 product: document.getElementById('formProduct').value,
-                notes: (existing && !editingId && document.getElementById('formNotes').value) 
-                       ? `[추가] ${document.getElementById('formNotes').value}\n---\n${existing.notes}` 
-                       : (document.getElementById('formNotes').value || (existing ? existing.notes : '')),
-                isUrgent: existing ? (existing.isUrgent || false) : false,
-                updatedAt: new Date().toISOString()
-            };
+                notes: document.getElementById('formNotes').value
+            });
 
-            await setDoc(docRef, payload, { merge: true });
-            closeModal();
+            if(success) closeModal();
+            else alert("서버 저장에 실패했습니다. (인증 확인 필요)");
         };
 
         window.fastUpdate = async (id, field, value) => {
@@ -442,19 +453,20 @@
         };
 
         window.toggleUrgent = async (id) => {
-            const c = customers.find(item => (item.id || item.phone) === id);
+            const c = customers.find(item => (item.id || item.phone.replace(/[^0-9]/g, '')) === id);
             if (c) {
                 const newUrgent = !(c.isUrgent === true);
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { isUrgent: newUrgent, updatedAt: new Date().toISOString() }, { merge: true });
             }
         };
 
+        // [AI 텍스트 처리 수리]
         window.processSmartInput = async () => {
             const text = document.getElementById('smartInput').value.trim();
             if (!text) return;
             document.getElementById('ai-loading').classList.remove('hidden');
 
-            const prompt = `다음 텍스트에서 {name, phone, product, notes}를 추출해 JSON 배열 [{...}]로 답해줘. 번호 8자리면 010 붙여. 품목은 [티비, 냉장고, 에어컨, 혼수 가전, 인덕션, 식기세척기] 중 하나. 텍스트: "${text}"`;
+            const prompt = `CRM 분석가로서 다음 텍스트에서 {name, phone, product, notes}를 추출해 JSON 배열 [{...}]로 답해줘. 8자리 번호면 010 붙여. 품목은 [티비, 냉장고, 에어컨, 혼수 가전, 인덕션, 식기세척기] 중 하나. 텍스트: "${text}"`;
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
@@ -465,10 +477,12 @@
                 const jsonStr = result.candidates[0].content.parts[0].text.match(/\[.*\]/s)[0];
                 const json = JSON.parse(jsonStr);
                 for (const item of json) {
-                    const id = item.phone || 'id-' + Date.now();
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { ...item, category: '미연락', isUrgent: false, updatedAt: new Date().toISOString() }, { merge: true });
+                    if (item.name || item.phone) {
+                        await window.secureSave({ ...item, category: '미연락', isUrgent: false });
+                    }
                 }
-            } catch (e) { alert("AI 분석 실패"); }
+                render();
+            } catch (e) { alert("AI 분석에 실패했습니다."); }
             document.getElementById('ai-loading').classList.add('hidden');
             document.getElementById('smartInput').value = "";
             closeModal();
@@ -484,14 +498,41 @@
             recognition.start();
         };
 
+        function showToast() {
+            const t = document.getElementById('save-toast');
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2000);
+        }
+
         window.requestDelete = (id) => { deletingId = id; document.getElementById('deleteModal').classList.replace('hidden', 'flex'); };
         window.closeDeleteModal = () => { document.getElementById('deleteModal').classList.replace('flex', 'hidden'); deletingId = null; };
         document.getElementById('confirmDeleteBtn').onclick = async () => { if(deletingId) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', deletingId)); closeDeleteModal(); };
 
+        window.openSettings = () => { document.getElementById('settingsModal').classList.replace('hidden', 'flex'); };
+        window.closeSettings = () => { document.getElementById('settingsModal').classList.replace('flex', 'hidden'); document.getElementById('newPinInput').value = ''; };
+        window.saveNewPIN = async () => {
+            const newPin = document.getElementById('newPinInput').value;
+            if(newPin.length !== 4) return alert("4자리 숫자로 입력해주세요.");
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'settings', 'security'), { pin: newPin }, { merge: true });
+            masterPIN = newPin;
+            alert("변경 완료");
+            closeSettings();
+        };
+
         window.setCategory = (cat) => { currentCategory = cat; document.body.className = `pb-24 select-none theme-${cat}`; document.querySelectorAll('nav button').forEach(b => b.className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive'); document.getElementById(`tab-${cat}`).className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active'; render(); };
         window.openModal = () => document.getElementById('modal').classList.replace('hidden', 'flex');
         window.closeModal = () => { document.getElementById('modal').classList.replace('flex', 'hidden'); editingId = null; document.getElementById('formName').value=''; document.getElementById('formPhone').value=''; document.getElementById('formNotes').value=''; };
-        window.editCustomer = (id) => { const c = customers.find(c => (c.id || c.phone) === id); if(!c) return; editingId = id; openModal(); document.getElementById('formName').value = c.name; document.getElementById('formPhone').value = c.phone; document.getElementById('formProduct').value = c.product || '미지정'; document.getElementById('formNotes').value = c.notes || ''; document.getElementById('formCategory').value = c.category; };
+        window.editCustomer = (id) => { 
+            const c = customers.find(c => (c.id || c.phone.replace(/[^0-9]/g, '')) === id); 
+            if(!c) return; 
+            editingId = id; 
+            openModal(); 
+            document.getElementById('formName').value = c.name; 
+            document.getElementById('formPhone').value = c.phone; 
+            document.getElementById('formProduct').value = c.product || '미지정'; 
+            document.getElementById('formNotes').value = c.notes || ''; 
+            document.getElementById('formCategory').value = c.category; 
+        };
     </script>
 </body>
 </html>
