@@ -18,7 +18,7 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
-        /* 업무 단계별 테마 시스템 */
+        /* 업무 단계별 테마 */
         .theme-연락 { --theme-color: #3b82f6; --theme-bg: #eff6ff; }
         .theme-구매 { --theme-color: #10b981; --theme-bg: #f0fdf4; }
         .theme-사은품 { --theme-color: #f59e0b; --theme-bg: #fffbeb; }
@@ -105,7 +105,7 @@
                     <span id="ai-loading" class="hidden text-[9px] font-bold text-indigo-400 animate-pulse">AI 분석 중...</span>
                 </div>
                 <div class="space-y-2">
-                    <textarea id="aiInput" class="w-full p-4 bg-white border border-indigo-100 rounded-2xl text-xs font-bold outline-none shadow-inner resize-none h-20" placeholder="예: 홍길동 01011112222 연락탭, 김철수 01022223333 구매탭"></textarea>
+                    <textarea id="aiInput" class="w-full p-4 bg-white border border-indigo-100 rounded-2xl text-xs font-bold outline-none shadow-inner resize-none h-20" placeholder="예: 홍길동 11112222, 김철수 01022223333 구매탭"></textarea>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="document.getElementById('imageUpload').click()" class="bg-white border border-indigo-200 text-indigo-500 rounded-xl py-2.5 text-[10px] font-black active-scale flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-camera"></i> 사진/장부 분석
@@ -113,7 +113,7 @@
                         <button onclick="document.getElementById('excelUpload').click()" class="bg-white border border-green-200 text-green-600 rounded-xl py-2.5 text-[10px] font-black active-scale flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-file-excel"></i> 엑셀/CSV 분석
                         </button>
-                        <button onclick="smartParse()" class="col-span-2 bg-indigo-600 text-white rounded-xl py-3 text-[11px] font-black active-scale shadow-md">정보 일괄 정리 및 자동 등록</button>
+                        <button id="bulkActionBtn" onclick="smartParse()" class="col-span-2 bg-indigo-600 text-white rounded-xl py-3 text-[11px] font-black active-scale shadow-md">정보 일괄 정리 및 자동 등록</button>
                     </div>
                     <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
                     <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(this)">
@@ -136,8 +136,8 @@
                 </div>
             </div>
             <div class="space-y-1.5">
-                <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">연락처</label>
-                <input id="formPhone" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-sm outline-none focus:bg-white shadow-sm" placeholder="010-0000-0000">
+                <label class="text-[9px] font-black text-slate-400 ml-1 uppercase">연락처 (8자리 입력 시 010 자동)</label>
+                <input id="formPhone" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-sm outline-none focus:bg-white shadow-sm" placeholder="번호 또는 숫자 8자리">
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1.5">
@@ -163,7 +163,7 @@
                 <textarea id="formNotes" rows="6" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-[28px] resize-none text-sm italic leading-relaxed outline-none focus:bg-white transition-all shadow-inner" placeholder="내용을 말씀하거나 입력하세요."></textarea>
             </div>
         </div>
-        <div class="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.04)]">
+        <div class="fixed bottom-0 left-0 right-0 p-5 bg-white border-t border-slate-100">
             <button onclick="saveCustomer()" class="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl active-scale text-sm uppercase tracking-[0.2em]">클라우드 실시간 저장</button>
         </div>
     </div>
@@ -177,17 +177,16 @@
         <p class="text-white/30 text-[10px] mt-3 font-bold tracking-[0.3em] uppercase">AI Voice Capture Mode</p>
     </div>
 
-    <!-- Firebase SDK 및 로직 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, updateDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 1. 초기 설정 및 환경 변수 처리
+        // 1. 초기 설정
         const apiKey = ""; 
         const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey":""}';
         const firebaseConfig = JSON.parse(configStr);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v23-final-stable';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v25-final';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
@@ -196,7 +195,29 @@
         let currentUser = null;
         let currentCategory = '연락';
 
-        // 2. 초기 구동 및 인증 (Vercel 배포 시 안정성 확보)
+        const recoveryList = [
+            { id: 'p_1', name: '에어컨 신규', phone: '010-2985-0955', category: '연락', notes: '시스템에어컨 상담 예정', nextContactDate: new Date().toISOString().split('T')[0], updatedAt: new Date().toISOString(), registeredAt: new Date().toISOString() },
+            { id: 'p_2', name: '조수진', phone: '010-4416-8488', category: '구매', notes: '냉장고 결제 대기 중', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_3', name: '김민규', phone: '010-2646-7785', category: '사은품', notes: '세탁기 사은품 증정 대기', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_4', name: '최진우', phone: '010-3814-7221', category: '연락', notes: '에어컨 교체 문의', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_5', name: '장성필', phone: '010-4553-6113', category: '구매', notes: '시스템 에어컨 전체 견적', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_6', name: '임수정', phone: '010-2521-5006', category: '사은품', notes: '사은품 수령 확인 중', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_7', name: '박정권', phone: '010-9107-5798', category: '연락', notes: '주요 상담 고객님', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_8', name: '차은주', phone: '010-4875-9936', category: '구매', notes: '5실 이상 견적', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_9', name: '최나임', phone: '010-3091-4080', category: '사은품', notes: '거실+안방 구조 확인', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+            { id: 'p_10', name: '박정근(담당)', phone: '010-0000-0000', category: '연락', notes: '시스템 관리자', registeredAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+        ];
+
+        // 2. 전화번호 정규화 유틸리티
+        const formatPhone = (val) => {
+            let num = val.replace(/[^0-9]/g, '');
+            if (num.length === 8) num = '010' + num;
+            if (num.length === 11) return num.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+            if (num.length === 10) return num.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+            return val;
+        };
+
+        // 3. 초기 구동
         const init = async () => {
             if (firebaseConfig.apiKey) {
                 const app = initializeApp(firebaseConfig);
@@ -216,32 +237,37 @@
             if (!currentUser || !db) return;
             const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
             onSnapshot(ref, (snapshot) => {
-                customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                render();
+                if (!snapshot.empty) {
+                    customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    render();
+                } else {
+                    recoveryList.forEach(item => setDoc(doc(ref, item.id), item));
+                }
                 document.getElementById('loading-screen').style.display = 'none';
-            }, (err) => {
-                console.warn("Firestore error, switching to local:", err);
-                useLocalStorage();
-            });
+            }, () => useLocalStorage());
         };
 
         const useLocalStorage = () => {
-            customers = JSON.parse(localStorage.getItem('crm_data_v23')) || [];
+            customers = JSON.parse(localStorage.getItem('crm_data_v25')) || recoveryList;
             render();
             document.getElementById('loading-screen').style.display = 'none';
         };
 
-        const saveToStorage = () => localStorage.setItem('crm_data_v23', JSON.stringify(customers));
+        const saveToStorage = () => localStorage.setItem('crm_data_v25', JSON.stringify(customers));
 
-        // 3. AI & 파일(Excel/Image) 분석 로직
+        // AI 분석 로직
         window.smartParse = async function(customInput = null) {
             const input = customInput || document.getElementById('aiInput').value;
             if (!input) return;
             const loader = document.getElementById('ai-loading');
+            const btn = document.getElementById('bulkActionBtn');
+            
             loader.classList.remove('hidden'); loader.innerText = "AI 분석 중...";
+            if (btn) btn.disabled = true;
 
-            const prompt = `CRM 비서입니다. 입력 텍스트에서 한 명 또는 여러 명의 고객 정보를 추출하여 JSON 배열로 응답하세요. 
-            형식: [{ "name": "이름", "phone": "010-0000-0000", "notes": "내용", "category": "연락/구매/사은품 중 하나" }]`;
+            const prompt = `CRM 전문 비서입니다. 입력 텍스트에서 한 명 이상의 고객 정보를 추출하여 JSON 배열로만 응답하세요. 
+            카테고리가 명시되지 않았다면 '연락'으로 분류하세요. 번호에 010이 없거나 8자리라면 자동으로 010을 추가하세요.
+            형식: [{ "name": "이름", "phone": "010-0000-0000", "notes": "메모", "category": "연락/구매/사은품 중 하나" }]`;
 
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
@@ -254,47 +280,64 @@
                     })
                 });
                 const json = await res.json();
-                const bulkData = JSON.parse(json.candidates[0].content.parts[0].text);
+                let resultText = json.candidates[0].content.parts[0].text;
+                resultText = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
+                const bulkData = JSON.parse(resultText);
 
                 if (Array.isArray(bulkData)) {
                     for (const data of bulkData) { await saveDirectly(data); }
-                    loader.innerText = `${bulkData.length}건 완료!`;
+                    loader.innerText = `${bulkData.length}건 등록 완료!`;
                     setTimeout(() => { loader.classList.add('hidden'); closeModal(); }, 1500);
-                } else {
-                    document.getElementById('formName').value = bulkData.name || '';
-                    document.getElementById('formPhone').value = bulkData.phone || '';
-                    document.getElementById('formNotes').value = bulkData.notes || '';
-                    if (bulkData.category) document.getElementById('formCategory').value = bulkData.category;
-                    loader.classList.add('hidden');
+                } else if (bulkData.name || bulkData.phone) {
+                    await saveDirectly(bulkData);
+                    loader.innerText = "1건 등록 완료!";
+                    setTimeout(() => { loader.classList.add('hidden'); closeModal(); }, 1500);
                 }
                 document.getElementById('aiInput').value = '';
-            } catch (e) { loader.innerText = "분석 실패"; setTimeout(() => loader.classList.add('hidden'), 2000); }
+            } catch (e) { 
+                loader.innerText = "분석 실패 (직접 입력 권장)"; 
+                setTimeout(() => loader.classList.add('hidden'), 2500); 
+            } finally { if (btn) btn.disabled = false; }
+        };
+
+        const saveDirectly = async (data) => {
+            const ts = new Date().toISOString();
+            const entry = { 
+                name: data.name || '고객', 
+                phone: formatPhone(data.phone || ''), 
+                notes: data.notes || '', 
+                category: data.category || '연락', 
+                updatedAt: ts, 
+                registeredAt: ts 
+            };
+            if (db && currentUser) {
+                const id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), entry);
+            } else {
+                customers.unshift({ id: Date.now().toString() + Math.random(), ...entry });
+                saveToStorage(); render();
+            }
         };
 
         window.handleExcelUpload = function(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const loader = document.getElementById('ai-loading');
-            loader.classList.remove('hidden'); loader.innerText = "엑셀 읽는 중...";
+            const file = input.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-                const txt = XLSX.utils.sheet_to_txt(workbook.Sheets[workbook.SheetNames[0]]);
-                smartParse(txt);
+                smartParse(XLSX.utils.sheet_to_txt(workbook.Sheets[workbook.SheetNames[0]]));
             };
             reader.readAsArrayBuffer(file);
         };
 
         window.handleImageUpload = async function(input) {
-            const file = input.files[0];
-            if (!file) return;
+            const file = input.files[0]; if (!file) return;
             const loader = document.getElementById('ai-loading');
             loader.classList.remove('hidden'); loader.innerText = "사진 분석 중...";
             const reader = new FileReader();
             reader.onload = async () => {
                 const base64Data = reader.result.split(',')[1];
-                const prompt = "이미지에서 이름, 번호, 메모를 추출하여 JSON 배열로 응답하세요. [{name, phone, notes}]";
+                const prompt = "이미지에서 이름, 번호(010 자동보정), 메모를 추출하여 JSON 배열로 응답하세요. [{name, phone, notes}]";
                 try {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                         method: 'POST',
@@ -305,27 +348,16 @@
                         })
                     });
                     const json = await res.json();
-                    const bulkData = JSON.parse(json.candidates[0].content.parts[0].text);
-                    if (Array.isArray(bulkData)) { for (const data of bulkData) { await saveDirectly(data); } loader.innerText = `${bulkData.length}건 완료!`; }
+                    let raw = json.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const bulkData = JSON.parse(raw);
+                    if (Array.isArray(bulkData)) { for (const data of bulkData) { await saveDirectly(data); } loader.innerText = `${bulkData.length}건 등록 완료!`; }
                     setTimeout(() => { loader.classList.add('hidden'); closeModal(); }, 2000);
-                } catch (e) { loader.innerText = "실패"; setTimeout(() => loader.classList.add('hidden'), 2000); }
+                } catch (e) { loader.innerText = "분석 실패"; setTimeout(() => loader.classList.add('hidden'), 2000); }
             };
             reader.readAsDataURL(file);
         };
 
-        const saveDirectly = async (data) => {
-            const ts = new Date().toISOString();
-            const entry = { name: data.name || '고객', phone: data.phone || '', notes: data.notes || '', category: data.category || currentCategory, updatedAt: ts, registeredAt: ts };
-            if (db && currentUser) {
-                const id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), entry);
-            } else {
-                customers.unshift({ id: Date.now().toString() + Math.random(), ...entry });
-                saveToStorage(); render();
-            }
-        };
-
-        // 4. UI 및 유틸리티
+        // UI 유틸리티
         window.setCategory = (cat) => {
             currentCategory = cat;
             const body = document.getElementById('mainBody');
@@ -351,9 +383,9 @@
 
         window.startSmartVoice = function() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert("브라우저 지원 안됨");
+            if (!SpeechRecognition) return alert("브라우저 미지원");
             const rec = new SpeechRecognition(); rec.lang = 'ko-KR';
-            rec.onstart = () => { document.getElementById('voiceOverlay').classList.remove('hidden'); };
+            rec.onstart = () => document.getElementById('voiceOverlay').classList.remove('hidden');
             rec.onend = () => { document.getElementById('voiceOverlay').classList.add('hidden'); setTimeout(() => { if(document.getElementById('aiInput').value) smartParse(); }, 500); };
             rec.onresult = (e) => { openModal(); document.getElementById('aiInput').value = e.results[0][0].transcript; };
             rec.start();
@@ -363,8 +395,8 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) return;
             const rec = new SpeechRecognition(); rec.lang = 'ko-KR';
-            rec.onstart = () => { document.getElementById('voiceOverlay').classList.remove('hidden'); };
-            rec.onend = () => { document.getElementById('voiceOverlay').classList.add('hidden'); };
+            rec.onstart = () => document.getElementById('voiceOverlay').classList.remove('hidden');
+            rec.onend = () => document.getElementById('voiceOverlay').classList.add('hidden');
             rec.onresult = (e) => { const target = document.getElementById(id); if (target) target.value += (target.value ? ' ' : '') + e.results[0][0].transcript; };
             rec.start();
         };
@@ -425,7 +457,7 @@
                                 </button>
                                 <div>
                                     <h4 class="font-black text-slate-800 text-lg leading-tight flex items-center gap-1.5">${c.name} ${isLate ? '<span class="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>' : ''}</h4>
-                                    <p class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">${c.phone || 'no phone'}</p>
+                                    <p class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">${formatPhone(c.phone || 'no phone')}</p>
                                 </div>
                             </div>
                             <div class="text-[7px] font-black bg-slate-50 text-slate-400 px-2 py-1 rounded-full uppercase tracking-widest">${nextInfo}</div>
@@ -437,8 +469,8 @@
                         </div>
                         <div class="bg-slate-50/70 rounded-2xl p-4 mb-4 border border-slate-50 text-[12px] text-slate-600 font-semibold italic leading-relaxed truncate-2">"${c.notes || '기록 없음'}"</div>
                         <div class="flex items-center gap-2">
-                            <a href="tel:${cleanPhone}" class="flex-[7] bg-slate-900 text-white py-4 rounded-2xl flex items-center justify-center gap-2.5 font-black text-xs shadow-lg active-scale no-underline">전화하기</a>
-                            <a href="sms:${cleanPhone}" class="flex-[7] bg-white border-2 border-slate-200 text-slate-800 py-4 rounded-2xl flex items-center justify-center gap-2.5 font-black text-xs active-scale no-underline shadow-sm">문자전송</a>
+                            <a href="tel:${cleanPhone}" class="flex-[7] bg-slate-900 text-white py-4 rounded-2xl flex items-center justify-center gap-2.5 font-black text-xs shadow-lg active-scale no-underline"><i class="fa-solid fa-phone text-[10px]"></i> 전화하기</a>
+                            <a href="sms:${cleanPhone}" class="flex-[7] bg-white border-2 border-slate-200 text-slate-800 py-4 rounded-2xl flex items-center justify-center gap-2.5 font-black text-xs active-scale no-underline shadow-sm"><i class="fa-solid fa-message text-[10px] text-slate-300"></i> 문자전송</a>
                             <button onclick="editCustomer('${c.id}')" class="flex-1 h-12 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center active-scale"><i class="fa-solid fa-pen text-sm"></i></button>
                             <button onclick="deleteCustomer('${c.id}')" class="flex-1 h-12 bg-slate-100 text-slate-300 rounded-xl flex items-center justify-center active-scale hover:text-red-400"><i class="fa-solid fa-trash text-sm"></i></button>
                         </div>
@@ -449,15 +481,19 @@
 
         window.saveCustomer = async function() {
             const name = document.getElementById('formName').value;
-            const phone = document.getElementById('formPhone').value;
+            let phone = document.getElementById('formPhone').value;
             const notes = document.getElementById('formNotes').value;
-            const cat = document.getElementById('formCategory').value;
+            const cat = document.getElementById('formCategory').value || '연락';
             const date = document.getElementById('formDate').value;
             const delivery = document.getElementById('formDeliveryDate').value;
+            
             if (!name || !phone) return alert('성함과 연락처 필수');
+            
+            phone = formatPhone(phone);
             const existing = customers.find(c => c.id === editingId);
             const ts = new Date().toISOString();
             const data = { name, phone, notes, category: cat, nextContactDate: date, deliveryDate: delivery, updatedAt: ts, registeredAt: existing ? (existing.registeredAt || ts) : ts };
+            
             if (db && currentUser) {
                 const id = editingId || Date.now().toString() + Math.random().toString(36).substr(2, 5);
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), data, { merge: true });
@@ -478,10 +514,11 @@
             document.getElementById('formCategory').value = c.category || '연락';
             document.getElementById('formDate').value = c.nextContactDate || '';
             document.getElementById('formDeliveryDate').value = c.deliveryDate || '';
-            if (c.registeredAt) { document.getElementById('reg-date-box').classList.remove('hidden'); document.getElementById('formRegDate').innerText = new Date(c.registeredAt).toLocaleString(); }
+            const box = document.getElementById('reg-date-box');
+            if (c.registeredAt && box) { box.classList.remove('hidden'); document.getElementById('formRegDate').innerText = new Date(c.registeredAt).toLocaleString(); }
         };
 
-        window.deleteCustomer = async function(id) { if (confirm('삭제하시겠습니까?')) { if (db && currentUser) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id)); } else { customers = customers.filter(c => c.id !== id); saveToStorage(); render(); } } };
+        window.deleteCustomer = async function(id) { if (confirm('영구 삭제하시겠습니까?')) { if (db && currentUser) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id)); } else { customers = customers.filter(c => c.id !== id); saveToStorage(); render(); } } };
 
         init();
     </script>
