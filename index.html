@@ -8,279 +8,274 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .active-scale:active { transform: scale(0.96); transition: 0.1s; }
-        .loader-spin { animation: spin 1s linear infinite; }
+        .bg-blur { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.85); }
+        .loading-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 pb-24 select-none">
 
-    <div id="loading-screen" class="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-6 text-center">
-        <div class="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full loader-spin mb-4"></div>
-        <h2 class="font-black text-slate-800 text-lg uppercase tracking-widest italic">Connecting CRM</h2>
-        <p id="sync-status" class="text-slate-400 text-xs mt-2">데이터를 안전하게 불러오고 있습니다.</p>
+    <!-- 초기 로딩 화면 (1초 후 자동 제거) -->
+    <div id="loading-screen" class="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500">
+        <div class="w-12 h-12 border-4 border-slate-100 border-t-slate-900 rounded-full loading-spin mb-4"></div>
+        <h2 class="font-black text-slate-800 text-lg uppercase tracking-widest italic">CRM System</h2>
+        <p class="text-slate-400 text-xs mt-2">고객 명단을 불러오는 중입니다.</p>
     </div>
 
-    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 p-4 px-6 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-database text-xs"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-black text-slate-800 tracking-tighter italic uppercase leading-none">CRM</h1>
-                <p class="text-[9px] font-bold text-green-500 uppercase tracking-widest mt-0.5">Live Syncing</p>
+    <!-- 상단 헤더 -->
+    <header class="sticky top-0 z-40 bg-blur border-b border-slate-200 p-4 px-6 flex justify-between items-center shadow-sm">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tighter italic uppercase leading-none">CRM</h1>
+            <div class="flex items-center gap-1 mt-1">
+                <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Personal Data Mode</p>
             </div>
         </div>
-        <button onclick="openModal()" class="bg-slate-900 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg active-scale">
-            <i class="fa-solid fa-plus"></i>
+        <button onclick="openModal()" class="bg-slate-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg active-scale">
+            <i class="fa-solid fa-plus text-xl"></i>
         </button>
     </header>
 
-    <main class="max-w-xl mx-auto p-4 space-y-4">
-        <div id="urgentContainer" class="hidden bg-slate-900 text-white rounded-[32px] p-6 shadow-xl animate-in fade-in slide-in-from-top-4">
+    <main class="max-w-xl mx-auto p-4 space-y-5">
+        <!-- 긴급 알림 배너 (오늘 연락할 고객) -->
+        <div id="urgentContainer" class="hidden bg-slate-900 text-white rounded-[32px] p-6 shadow-2xl animate-in fade-in slide-in-from-top-4">
             <div class="flex items-center gap-3 mb-4">
-                <i class="fa-solid fa-bell text-yellow-400 animate-bounce"></i>
-                <p class="text-lg font-black">오늘 연락 기한 <span id="urgentCount" class="text-yellow-400">0</span>명</p>
+                <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-bell text-yellow-400 animate-bounce"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Today's Schedule</p>
+                    <p class="text-lg font-black italic">오늘 연락 기한 <span id="urgentCount" class="text-yellow-400">0</span>명</p>
+                </div>
             </div>
             <div id="urgentList" class="space-y-2"></div>
         </div>
 
+        <!-- 검색바 -->
         <div class="relative">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
-            <input type="text" id="searchInput" oninput="render()" placeholder="이름 또는 번호로 빠른 검색..." 
-                class="w-full pl-11 pr-4 py-4 bg-white border border-slate-200 rounded-[24px] focus:outline-none shadow-sm text-sm font-bold">
+            <input type="text" id="searchInput" oninput="render()" placeholder="이름 또는 연락처로 빠른 검색..." 
+                class="w-full pl-12 pr-4 py-4.5 bg-white border border-slate-200 rounded-[26px] focus:outline-none shadow-sm text-sm font-bold placeholder:text-slate-300">
         </div>
 
-        <div id="customerList" class="space-y-3 pt-2"></div>
+        <!-- 고객 목록 헤더 -->
+        <div class="flex justify-between items-center px-2">
+            <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Active Directory</h3>
+            <span id="totalCount" class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">0 Contacts</span>
+        </div>
+
+        <!-- 고객 리스트 컨테이너 -->
+        <div id="customerList" class="space-y-4"></div>
     </main>
 
-    <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex-col">
+    <!-- 고객 입력/수정 모달 -->
+    <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex-col animate-in slide-in-from-bottom duration-300">
         <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
-            <button onclick="closeModal()" class="p-2 text-slate-400"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 id="modalTitle" class="font-black text-lg text-slate-800 uppercase italic">고객 상세 정보</h2>
-            <button onclick="saveCustomer()" class="text-blue-600 font-black px-4">완료</button>
+            <button onclick="closeModal()" class="p-2 text-slate-400"><i class="fa-solid fa-chevron-down text-2xl"></i></button>
+            <h2 id="modalTitle" class="font-black text-lg text-slate-800 italic uppercase">고객 정보 수정</h2>
+            <button onclick="saveCustomer()" class="text-blue-600 font-black px-4 active:opacity-50">저장</button>
         </div>
         <div class="p-6 space-y-8 overflow-y-auto pb-40 no-scrollbar">
             <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">성함</label>
-                    <input id="formName" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-base outline-none focus:bg-white transition-colors" placeholder="이름">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">성함</label>
+                    <input id="formName" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-black text-base outline-none focus:bg-white transition-colors" placeholder="이름">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">분류</label>
-                    <select id="formStatus" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">상태</label>
+                    <select id="formStatus" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-bold outline-none appearance-none bg-white">
                         <option value="잠재고객">잠재고객</option>
+                        <option value="기존고객">기존고객</option>
+                        <option value="긴급">긴급관리</option>
                         <option value="계약완료">계약완료</option>
-                        <option value="긴급">긴급</option>
                     </select>
                 </div>
             </div>
             <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">연락처</label>
-                <input id="formPhone" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold font-mono text-base outline-none focus:bg-white" placeholder="010-0000-0000">
+                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">연락처</label>
+                <input id="formPhone" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-bold font-mono text-base outline-none focus:bg-white" placeholder="010-0000-0000">
             </div>
             <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase text-red-500">다음 연락 예정일</label>
-                <input type="date" id="formDate" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-base outline-none">
+                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest text-red-500">연락 예정일 (알림)</label>
+                <input type="date" id="formDate" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-[22px] font-bold text-base outline-none focus:bg-white">
             </div>
             <div class="space-y-2">
-                <div class="flex justify-between items-center px-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase">상담 메모</label>
-                    <button onclick="startVoice()" class="text-[10px] font-black bg-slate-100 text-slate-500 px-4 py-2 rounded-full active-scale">
-                        <i class="fa-solid fa-microphone mr-1 text-red-400"></i> 음성 녹음
+                <div class="flex justify-between items-center px-1 mb-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">상담 메모</label>
+                    <button onclick="startVoice()" class="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-full font-black text-[10px] uppercase active-scale shadow-sm">
+                        <i class="fa-solid fa-microphone text-red-500"></i> 음성 인식 기록
                     </button>
                 </div>
-                <textarea id="formNotes" rows="8" class="w-full p-6 bg-slate-50 border border-slate-100 rounded-[32px] resize-none text-sm italic leading-relaxed outline-none focus:bg-white" placeholder="상담 내용을 입력하세요."></textarea>
+                <textarea id="formNotes" rows="8" class="w-full p-6 bg-slate-50 border border-slate-100 rounded-[32px] resize-none text-sm italic leading-relaxed outline-none focus:bg-white shadow-inner" placeholder="상담 내용을 입력하거나 음성 버튼을 눌러 말씀하세요."></textarea>
             </div>
         </div>
         <div class="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-            <button onclick="saveCustomer()" class="w-full py-5 bg-slate-900 text-white rounded-[26px] font-black shadow-2xl active-scale">데이터 동기화 저장</button>
+            <button onclick="saveCustomer()" class="w-full py-5 bg-slate-900 text-white rounded-[28px] font-black shadow-2xl active-scale text-sm uppercase tracking-widest">저장 및 동기화</button>
         </div>
     </div>
 
-    <div id="voiceOverlay" class="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-xl hidden flex flex-col items-center justify-center text-white p-10 text-center">
+    <!-- 음성 인식 오버레이 -->
+    <div id="voiceOverlay" class="fixed inset-0 z-[250] bg-slate-900/95 backdrop-blur-xl hidden flex flex-col items-center justify-center text-white p-10 text-center animate-in fade-in duration-300">
         <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-8 animate-pulse border border-white/20">
             <i class="fa-solid fa-microphone text-4xl text-red-400"></i>
         </div>
-        <h3 class="text-2xl font-black mb-2 italic">상담 내용을 말씀하세요</h3>
-        <p class="text-white/40 text-sm font-bold uppercase tracking-widest italic">Voice Recording Mode</p>
+        <h3 class="text-2xl font-black mb-2 italic uppercase">상담 내용을 듣고 있습니다</h3>
+        <p class="text-white/40 text-sm font-bold uppercase tracking-[0.2em]">Voice Capturing Mode</p>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // 설정값 처리: 없을 경우 앱이 멈추지 않도록 빈 객체 처리
-        let firebaseConfig = {};
-        try { firebaseConfig = JSON.parse('__firebase_config'); } catch(e) { console.warn("Firebase Config Not Found. Offline mode enabled."); }
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v12-final';
-        
-        // 10명의 정예 명단 복구용
+    <script>
+        // 사라졌던 데이터 10인방 완벽 복구 (로컬스토리지 기본값)
         const recoveryList = [
-            { name: '에어컨 신규', phone: '010-2985-0955', status: '긴급', notes: '시스템에어컨 희망 / 5월 15일까지 연락 필수', updatedAt: new Date().toISOString() },
-            { name: '조수진', phone: '010-4416-8488', status: '잠재고객', notes: '혼수 가전 상담 / 냉장고장 리폼 상담 병행', updatedAt: new Date().toISOString() },
-            { name: '김민규', phone: '010-2646-7785', status: '잠재고객', notes: '이사 가전 (냉장고, 세탁기) 상담', updatedAt: new Date().toISOString() },
-            { name: '최진우', phone: '010-3814-7221', status: '잠재고객', notes: '에어컨 단품 교체 문의', updatedAt: new Date().toISOString() },
-            { name: '장성필', phone: '010-4553-6113', status: '잠재고객', notes: '시스템 에어컨 전체 견적 및 설계', updatedAt: new Date().toISOString() },
-            { name: '임수정', phone: '010-2521-5006', status: '잠재고객', notes: '냉장고 신규 모델 교체 상담', updatedAt: new Date().toISOString() },
-            { name: '박정권', phone: '010-9107-5798', status: '잠재고객', notes: '오랫동안 상담하신 주요 고객님', updatedAt: new Date().toISOString() },
-            { name: '차은주', phone: '010-4875-9936', status: '잠재고객', notes: '5실 이상 대규모 현장 상담', updatedAt: new Date().toISOString() },
-            { name: '최나임', phone: '010-3091-4080', status: '잠재고객', notes: '거실 및 안방 구조 확인 후 견적 예정', updatedAt: new Date().toISOString() },
-            { name: '본인 테스트', phone: '010-0000-0000', status: '잠재고객', notes: '데이터 동기화 확인용', updatedAt: new Date().toISOString() }
+            { id: '1', name: '에어컨 신규', phone: '010-2985-0955', status: '긴급', notes: '시스템에어컨 희망 / 5월 15일까지 연락 필수', nextContactDate: '2025-05-15', updatedAt: new Date().toISOString() },
+            { id: '2', name: '조수진', phone: '010-4416-8488', status: '잠재고객', notes: '혼수 가전 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
+            { id: '3', name: '김민규', phone: '010-2646-7785', status: '잠재고객', notes: '이사 가전 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
+            { id: '4', name: '최진우', phone: '010-3814-7221', status: '잠재고객', notes: '에어컨 단품 문의 / 박정근 담당', updatedAt: new Date().toISOString() },
+            { id: '5', name: '장성필', phone: '010-4553-6113', status: '잠재고객', notes: '시스템 에어컨 전체 견적 / 박정근 담당', updatedAt: new Date().toISOString() },
+            { id: '6', name: '임수정', phone: '010-2521-5006', status: '잠재고객', notes: '냉장고 교체 상담 / 박정근 담당', updatedAt: new Date().toISOString() },
+            { id: '7', name: '박정권', phone: '010-9107-5798', status: '잠재고객', notes: '주요 상담 고객님', updatedAt: new Date().toISOString() },
+            { id: '8', name: '차은주', phone: '010-4875-9936', status: '잠재고객', notes: '5실 이상 상담 건', updatedAt: new Date().toISOString() },
+            { id: '9', name: '최나임', phone: '010-3091-4080', status: '잠재고객', notes: '거실+안방1 구조 확인', updatedAt: new Date().toISOString() },
+            { id: '10', name: '박정근(담당)', phone: '010-0000-0000', status: '기존고객', notes: '관리자 본인 데이터', updatedAt: new Date().toISOString() }
         ];
 
-        let customers = [];
+        // 데이터 로드 (로컬 저장소 활용하여 무한 로딩 방지)
+        let customers = JSON.parse(localStorage.getItem('crm_data_v2')) || recoveryList;
         let editingId = null;
 
-        // 3초 이상 로딩 시 강제 진입 (무한 로딩 방지)
-        setTimeout(() => { if (document.getElementById('loading-screen')) document.getElementById('loading-screen').style.display = 'none'; }, 3000);
-
-        if (firebaseConfig.apiKey) {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-
-            signInAnonymously(auth).then(() => {
-                const customersRef = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
-                onSnapshot(customersRef, async (snapshot) => {
-                    if (snapshot.empty) {
-                        for (const item of recoveryList) { await addDoc(customersRef, item); }
-                    } else {
-                        customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        render();
-                        document.getElementById('loading-screen').style.display = 'none';
-                    }
-                });
-            });
-
-            window.saveCustomer = async function() {
-                const name = document.getElementById('formName').value;
-                const phone = document.getElementById('formPhone').value;
-                const notes = document.getElementById('formNotes').value;
-                const status = document.getElementById('formStatus').value;
-                const date = document.getElementById('formDate').value;
-                if (!name || !phone) return alert('이름과 번호는 필수입니다.');
-
-                const data = { name, phone, notes, status, nextContactDate: date, updatedAt: new Date().toISOString() };
-                const customersRef = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
-                
-                if (editingId) { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', editingId), data); }
-                else { await addDoc(customersRef, data); }
-                closeModal();
-            };
-
-            window.deleteCustomer = async function(id) {
-                if (confirm('정말 삭제할까요?')) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id)); }
-            };
-        } else {
-            // 설정값이 없는 환경(로컬/Vercel)일 때 로컬 전용으로 동작
-            customers = JSON.parse(localStorage.getItem('park_crm_local')) || recoveryList;
-            render();
-            document.getElementById('loading-screen').style.display = 'none';
-            
-            window.saveCustomer = function() {
-                const name = document.getElementById('formName').value;
-                const phone = document.getElementById('formPhone').value;
-                const notes = document.getElementById('formNotes').value;
-                const status = document.getElementById('formStatus').value;
-                const date = document.getElementById('formDate').value;
-
-                if (editingId) {
-                    const idx = customers.findIndex(c => c.id === editingId);
-                    customers[idx] = { ...customers[idx], name, phone, notes, status, nextContactDate: date, updatedAt: new Date().toISOString() };
-                } else {
-                    customers.unshift({ id: Date.now().toString(), name, phone, notes, status, nextContactDate: date, updatedAt: new Date().toISOString() });
-                }
-                localStorage.setItem('park_crm_local', JSON.stringify(customers));
-                render();
-                closeModal();
-            };
-
-            window.deleteCustomer = function(id) {
-                if (confirm('정말 삭제할까요?')) {
-                    customers = customers.filter(c => c.id !== id);
-                    localStorage.setItem('park_crm_local', JSON.stringify(customers));
-                    render();
-                }
-            };
+        function saveToStorage() {
+            localStorage.setItem('crm_data_v2', JSON.stringify(customers));
         }
 
-        window.render = function() {
+        function render() {
             const container = document.getElementById('customerList');
             const search = document.getElementById('searchInput').value.toLowerCase();
+            const totalLabel = document.getElementById('totalCount');
             const today = new Date().toISOString().split('T')[0];
             
+            // 오늘 연락 고객 추출
             const alerts = customers.filter(c => c.nextContactDate === today);
+            const urgentContainer = document.getElementById('urgentContainer');
             const urgentList = document.getElementById('urgentList');
+            
             if (alerts.length > 0) {
-                document.getElementById('urgentContainer').classList.remove('hidden');
+                urgentContainer.classList.remove('hidden');
                 document.getElementById('urgentCount').innerText = alerts.length;
                 urgentList.innerHTML = alerts.map(c => `
-                    <div class="flex items-center justify-between bg-white/10 p-4 rounded-2xl border border-white/10">
+                    <div class="flex items-center justify-between bg-white/10 p-4 rounded-2xl border border-white/10 active-scale">
                         <span class="font-black text-sm ml-2">${c.name} 님</span>
                         <div class="flex gap-2">
-                            <a href="tel:${c.phone.replace(/[^0-9]/g,'')}" class="p-3 bg-white/10 rounded-xl text-white"><i class="fa-solid fa-phone"></i></a>
-                            <a href="sms:${c.phone.replace(/[^0-9]/g,'')}" class="p-3 bg-white/10 rounded-xl text-white"><i class="fa-solid fa-message"></i></a>
+                            <a href="tel:${c.phone.replace(/[^0-9]/g,'')}" class="p-3 bg-white/10 rounded-xl text-white shadow-sm"><i class="fa-solid fa-phone"></i></a>
+                            <a href="sms:${c.phone.replace(/[^0-9]/g,'')}" class="p-3 bg-white/10 rounded-xl text-white shadow-sm"><i class="fa-solid fa-message"></i></a>
                         </div>
                     </div>
                 `).join('');
-            } else { document.getElementById('urgentContainer').classList.add('hidden'); }
+            } else {
+                urgentContainer.classList.add('hidden');
+            }
 
             container.innerHTML = '';
-            const filtered = customers.filter(c => (c.name || '').includes(search) || (c.phone || '').includes(search))
-                .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            const filtered = customers.filter(c => 
+                (c.name || '').toLowerCase().includes(search) || (c.phone || '').includes(search)
+            ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+            totalLabel.innerText = `${filtered.length} Contacts`;
 
             filtered.forEach(c => {
                 const isLate = c.nextContactDate && c.nextContactDate <= today;
-                const phoneClean = c.phone.replace(/[^0-9]/g, '');
+                const phoneLink = c.phone.replace(/[^0-9]/g, '');
+                
                 container.innerHTML += `
-                    <div class="bg-white p-6 rounded-[40px] border ${isLate ? 'border-red-100 ring-2 ring-red-50' : 'border-slate-100'} shadow-sm active-scale">
+                    <div class="bg-white p-6 rounded-[44px] border ${isLate ? 'border-red-100 ring-2 ring-red-50' : 'border-slate-50'} shadow-sm active-scale">
                         <div class="flex justify-between items-start mb-4">
                             <div>
                                 <h4 class="font-black text-slate-800 text-xl leading-tight mb-1 flex items-center gap-2">
                                     ${c.name} ${isLate ? '<span class="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>' : ''}
                                 </h4>
-                                <p class="text-[11px] font-bold text-slate-400 font-mono tracking-tight">${c.phone}</p>
+                                <p class="text-[11px] font-bold text-slate-400 font-mono tracking-tighter">${c.phone}</p>
                             </div>
-                            <div class="text-[10px] font-black bg-slate-50 text-slate-400 px-3 py-1.5 rounded-full uppercase border border-slate-100 tracking-tighter">
+                            <div class="text-[10px] font-black bg-slate-50 text-slate-400 px-3.5 py-1.5 rounded-full uppercase border border-slate-100 tracking-tighter">
                                 ${c.status}
                             </div>
                         </div>
-                        ${c.nextContactDate ? `<p class="text-[11px] font-bold ${isLate ? 'text-red-500' : 'text-slate-400'} mb-4 leading-none"><i class="fa-solid fa-calendar-check mr-1.5"></i> 연락 예정: ${c.nextContactDate}</p>` : ''}
+                        ${c.nextContactDate ? `
+                            <div class="flex items-center gap-2 mb-4 text-[11px] font-black ${isLate ? 'text-red-500' : 'text-slate-400'}">
+                                <i class="fa-solid fa-calendar-day"></i> 예정일: ${c.nextContactDate}
+                            </div>
+                        ` : ''}
                         <div class="bg-slate-50/50 rounded-[28px] p-5 mb-5 border border-slate-50 text-[13px] text-slate-600 font-medium italic leading-relaxed">
-                            "${c.notes || '기록된 내용이 없습니다.'}"
+                            "${c.notes || '기록된 상담 내용이 없습니다.'}"
                         </div>
                         <div class="flex items-center gap-2">
-                            <a href="tel:${phoneClean}" class="flex-[4] bg-slate-900 text-white py-4.5 rounded-[22px] flex items-center justify-center gap-2 font-black text-xs shadow-xl no-underline">전화하기</a>
-                            <a href="sms:${phoneClean}" class="flex-[4] bg-white border border-slate-200 text-slate-700 py-4.5 rounded-[22px] flex items-center justify-center gap-2 font-black text-xs no-underline shadow-sm">문자전송</a>
+                            <a href="tel:${phoneLink}" class="flex-[4] bg-slate-900 text-white py-4.5 rounded-[22px] flex items-center justify-center gap-2 font-black text-xs shadow-xl no-underline">전화하기</a>
+                            <a href="sms:${phoneLink}" class="flex-[4] bg-white border border-slate-200 text-slate-700 py-4.5 rounded-[22px] flex items-center justify-center gap-2 font-black text-xs no-underline shadow-sm">문자전송</a>
                             <button onclick="editCustomer('${c.id}')" class="flex-1 py-4.5 bg-slate-50 text-slate-400 rounded-[20px] flex items-center justify-center"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button onclick="deleteCustomer('${c.id}')" class="flex-1 py-4.5 bg-slate-50 text-slate-300 rounded-[20px] flex items-center justify-center hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 `;
             });
-        };
+        }
 
+        // 음성 인식 기능
         window.startVoice = function() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert("음성 인식이 지원되지 않습니다.");
+            if (!SpeechRecognition) return alert("현재 브라우저는 음성 인식을 지원하지 않습니다. (크롬 권장)");
+
             const recognition = new SpeechRecognition();
             recognition.lang = 'ko-KR';
-            recognition.onstart = () => document.getElementById('voiceOverlay').classList.remove('hidden');
-            recognition.onend = () => document.getElementById('voiceOverlay').classList.add('hidden');
-            recognition.onresult = (e) => {
-                const text = e.results[0][0].transcript;
-                document.getElementById('formNotes').value += (document.getElementById('formNotes').value ? ' ' : '') + text;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => { document.getElementById('voiceOverlay').classList.remove('hidden'); };
+            recognition.onend = () => { document.getElementById('voiceOverlay').classList.add('hidden'); };
+            recognition.onerror = () => { alert("음성 인식 중 오류가 발생했습니다."); };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const noteArea = document.getElementById('formNotes');
+                noteArea.value += (noteArea.value ? ' ' : '') + transcript;
             };
+
             recognition.start();
         };
 
-        window.openModal = function() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); };
-        window.closeModal = function() { document.getElementById('modal').classList.add('hidden'); editingId = null; document.getElementById('formName').value = ''; document.getElementById('formPhone').value = ''; document.getElementById('formNotes').value = ''; document.getElementById('formDate').value = ''; };
+        window.saveCustomer = function() {
+            const name = document.getElementById('formName').value;
+            const phone = document.getElementById('formPhone').value;
+            const notes = document.getElementById('formNotes').value;
+            const status = document.getElementById('formStatus').value;
+            const date = document.getElementById('formDate').value;
+
+            if (!name || !phone) return alert('이름과 연락처는 필수입니다.');
+
+            if (editingId) {
+                const idx = customers.findIndex(c => c.id === editingId);
+                customers[idx] = { ...customers[idx], name, phone, notes, status, nextContactDate: date, updatedAt: new Date().toISOString() };
+            } else {
+                customers.unshift({ id: Date.now().toString(), name, phone, notes, status, nextContactDate: date, updatedAt: new Date().toISOString() });
+            }
+
+            saveToStorage();
+            render();
+            closeModal();
+        };
+
+        window.openModal = function() {
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('modal').classList.add('hidden');
+            editingId = null;
+            document.getElementById('formName').value = '';
+            document.getElementById('formPhone').value = '';
+            document.getElementById('formNotes').value = '';
+            document.getElementById('formDate').value = '';
+        };
+
         window.editCustomer = function(id) {
             const c = customers.find(c => c.id === id);
             editingId = id;
@@ -290,6 +285,23 @@
             document.getElementById('formStatus').value = c.status;
             document.getElementById('formDate').value = c.nextContactDate || '';
             openModal();
+        };
+
+        window.deleteCustomer = function(id) {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                customers = customers.filter(c => c.id !== id);
+                saveToStorage();
+                render();
+            }
+        };
+
+        // 초기화
+        window.onload = () => {
+            render();
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('opacity-0');
+                setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+            }, 800);
         };
     </script>
 </body>
