@@ -55,7 +55,7 @@
             </div>
             <div>
                 <h1 class="text-xl font-black text-slate-800 tracking-tighter italic uppercase leading-none">CRM Pro</h1>
-                <p id="sync-status" class="text-[9px] font-black text-green-500 uppercase tracking-widest mt-1">Full Database Active</p>
+                <p id="sync-status" class="text-[9px] font-black text-green-500 uppercase tracking-widest mt-1">Direct Edit & Sync</p>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -68,7 +68,7 @@
         </div>
     </header>
 
-    <!-- 탭 메뉴 (전체 탭 포함) -->
+    <!-- 탭 메뉴 -->
     <nav class="sticky top-[73px] z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar">
         <button onclick="setCategory('전체')" id="tab-전체" class="flex-none px-6 py-5 text-sm tracking-tighter transition-all tab-active">전체</button>
         <button onclick="setCategory('긴급')" id="tab-긴급" class="flex-none px-6 py-5 text-sm tracking-tighter transition-all tab-inactive">긴급 관리</button>
@@ -85,17 +85,17 @@
                     <i class="fa-solid fa-fire-flame-curved animate-pulse text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Priority Alert</p>
-                    <p class="text-lg font-black italic">미완료 긴급건 <span id="urgentCount" class="text-red-400">0</span>명</p>
+                    <p class="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Today's Focus</p>
+                    <p class="text-lg font-black italic">미완료 긴급 <span id="urgentCount" class="text-red-400">0</span>명</p>
                 </div>
             </div>
             <div id="urgentList" class="space-y-3"></div>
         </div>
 
-        <!-- 검색바 (이름, 번호, 품목 모두 지원) -->
+        <!-- 검색바 -->
         <div class="relative">
             <i class="fa-solid fa-magnifying-glass absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 text-lg"></i>
-            <input type="text" id="searchInput" oninput="render()" placeholder="이름, 번호, 품목(에어컨 등) 검색..." 
+            <input type="text" id="searchInput" oninput="render()" placeholder="이름, 번호, 품목 검색..." 
                 class="w-full pl-16 pr-6 py-6 bg-white border border-slate-100 rounded-[32px] focus:outline-none shadow-sm text-lg font-bold placeholder:text-slate-300">
         </div>
         
@@ -124,7 +124,6 @@
             </div>
         </div>
 
-        <!-- 고객 리스트 컨테이너 -->
         <div id="customerList" class="space-y-5"></div>
     </main>
 
@@ -136,8 +135,7 @@
             <button onclick="saveCustomer()" class="text-blue-600 font-black px-4 text-2xl active-scale">저장</button>
         </div>
         <div class="p-6 space-y-8 overflow-y-auto pb-60 no-scrollbar">
-            
-            <!-- 스마트 입력 엔진 -->
+            <!-- 스마트 입력 -->
             <div class="bg-blue-50 p-6 rounded-[36px] border border-blue-100 space-y-4 shadow-sm">
                 <div class="flex justify-between items-center">
                     <label class="text-[11px] font-black text-blue-600 uppercase tracking-widest"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i> 지능형 멀티 등록</label>
@@ -201,15 +199,14 @@
                 </div>
             </div>
 
-            <!-- 사진 섹션 -->
             <div class="space-y-3">
-                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">상담 메모 사진 첨부</label>
+                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">상담 메모 사진</label>
                 <div id="imageArea" class="hidden relative">
                     <img id="formImagePreview" src="" class="w-full h-64 object-cover rounded-[36px] border-4 border-slate-50 shadow-sm">
                     <button onclick="removeImage()" class="absolute top-4 right-4 w-12 h-12 bg-black/60 text-white rounded-full flex items-center justify-center active-scale shadow-lg"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <button onclick="document.getElementById('photoInput').click()" class="w-full py-6 border-2 border-dashed border-slate-200 rounded-[32px] text-slate-400 text-base font-bold active-scale flex items-center justify-center gap-3 transition-colors">
-                    <i class="fa-solid fa-camera text-2xl"></i> 사진 추가 (메모 전용)
+                    <i class="fa-solid fa-camera text-2xl"></i> 사진 추가
                 </button>
                 <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewImage(this)">
             </div>
@@ -224,7 +221,7 @@
                 <textarea id="formNotes" rows="8" class="w-full p-7 bg-slate-50 border border-slate-100 rounded-[40px] resize-none text-lg italic leading-relaxed outline-none focus:bg-white transition-all shadow-inner" placeholder="내용을 기록하세요."></textarea>
             </div>
         </div>
-        <div class="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100">
+        <div class="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
             <button onclick="saveCustomer()" class="w-full py-6 bg-slate-900 text-white rounded-[28px] font-black shadow-2xl active-scale text-lg uppercase tracking-[0.2em]">데이터 안전 저장</button>
         </div>
     </div>
@@ -245,8 +242,9 @@
         // 1. 설정
         const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey":""}';
         const firebaseConfig = JSON.parse(configStr);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v50-restore';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-v50-fixed';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const apiKey = "";
         
         let db, auth;
         let customers = [];
@@ -257,7 +255,7 @@
 
         const products = ['미지정', '티비', '냉장고', '에어컨', '혼수', '인덕션', '식기세척기', '김치냉장고'];
 
-        // 요청하신 기존 명단 10인방 복구
+        // 명단 10인방 복구 데이터
         const recoveryList = [
             { name: '에어컨 신규', phone: '010-2985-0955', category: '긴급', product: '에어컨', notes: '오늘 연락 필수!', updatedAt: new Date().toISOString(), isCompleted: false, registeredAt: new Date().toISOString() },
             { name: '조수진', phone: '010-4416-8488', category: '구매', product: '혼수', notes: '혼수 가전 상담 / 박정근 담당', updatedAt: new Date().toISOString(), isCompleted: false, registeredAt: new Date().toISOString() },
@@ -272,6 +270,7 @@
         ];
 
         // 2. 유틸리티
+        const hideLoader = () => { const loader = document.getElementById('loading-screen'); if(loader) loader.style.display = 'none'; };
         const formatPhone = (val) => {
             if (!val) return '';
             let num = val.toString().replace(/[^0-9]/g, '');
@@ -296,7 +295,7 @@
             return updateDate < threeMonthsAgo;
         };
 
-        // 3. 인라인 빠른 업데이트 및 중복 관리
+        // 3. 데이터 로직 (인라인 수정 포함)
         window.fastUpdate = async (id, field, value) => {
             const ts = new Date().toISOString();
             if (db && currentUser) {
@@ -329,20 +328,27 @@
             }
         };
 
-        // 4. 초기화 및 동기화 (Rule 3)
+        // 4. 초기화 (안전 로딩 해제 추가)
         const init = async () => {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
             try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // 타임아웃 방지: 5초 후에도 응답 없으면 로컬 데이터로 강제 전환
+                setTimeout(() => { if(!currentUser) useLocalStorage(); }, 5000);
+
                 if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
                 else await signInAnonymously(auth);
-            } catch (e) { useLocalStorage(); return; }
 
-            onAuthStateChanged(auth, (user) => {
-                if (user) { currentUser = user; startFirestoreSync(); }
-                else useLocalStorage();
-            });
+                onAuthStateChanged(auth, (user) => {
+                    if (user) { currentUser = user; startFirestoreSync(); }
+                    else useLocalStorage();
+                });
+            } catch (e) {
+                console.error("Init Error:", e);
+                useLocalStorage();
+            }
         };
 
         const startFirestoreSync = () => {
@@ -357,15 +363,22 @@
                 } else {
                     customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     render();
+                    hideLoader();
                 }
-                document.getElementById('loading-screen').style.display = 'none';
-            }, (err) => { console.error(err); useLocalStorage(); });
+            }, (err) => {
+                console.error("Snapshot Error:", err);
+                useLocalStorage();
+            });
         };
 
-        const useLocalStorage = () => { customers = JSON.parse(localStorage.getItem('crm_v50')) || recoveryList; render(); document.getElementById('loading-screen').style.display = 'none'; };
-        const saveToStorage = () => localStorage.setItem('crm_v50', JSON.stringify(customers));
+        const useLocalStorage = () => { 
+            customers = JSON.parse(localStorage.getItem('crm_v50_fixed')) || recoveryList; 
+            render(); 
+            hideLoader();
+        };
+        const saveToStorage = () => localStorage.setItem('crm_v50_fixed', JSON.stringify(customers));
 
-        // 5. 렌더링 엔진 (전체 카테고리 + 품목 검색 강화)
+        // 5. 렌더링 엔진 (전체 탭 & 품목 검색)
         window.render = function() {
             const container = document.getElementById('customerList'); if (!container) return;
             const search = document.getElementById('searchInput').value.toLowerCase();
@@ -373,25 +386,17 @@
             const productFilter = document.getElementById('productFilter').value;
             const today = new Date().toISOString().split('T')[0];
             
-            // 필터링: 카테고리 (전체 탭일 경우 패스)
             let filtered = customers;
-            if (currentCategory !== '전체') {
-                filtered = filtered.filter(c => (c.category || '연락') === currentCategory);
-            }
+            if (currentCategory !== '전체') filtered = filtered.filter(c => (c.category || '연락') === currentCategory);
 
-            // [핵심] 검색 강화: 이름, 번호, 품목 모두 검색
             filtered = filtered.filter(c => 
                 (c.name || '').toLowerCase().includes(search) || 
                 (c.phone || '').includes(search) ||
                 (c.product || '').toLowerCase().includes(search)
             );
             
-            // 품목 선택 필터
-            if (productFilter !== 'all') {
-                filtered = filtered.filter(c => (c.product || '미지정') === productFilter);
-            }
+            if (productFilter !== 'all') filtered = filtered.filter(c => (c.product || '미지정') === productFilter);
 
-            // 정렬
             filtered.sort((a, b) => {
                 if (a.isCompleted && !b.isCompleted) return 1;
                 if (!a.isCompleted && b.isCompleted) return -1;
@@ -401,7 +406,7 @@
                 return 0;
             });
 
-            // 긴급 배너
+            // 긴급 건 상단 배너
             const urgents = customers.filter(c => !c.isCompleted && (c.category === '긴급' || (c.nextContactDate === today)));
             const urgentContainer = document.getElementById('urgentContainer');
             if (urgents.length > 0) {
@@ -411,8 +416,8 @@
                     <div class="flex items-center justify-between bg-white/10 p-5 rounded-[28px] border border-white/10 active-scale shadow-sm">
                         <span class="font-black text-lg ml-2">${c.name} (${c.product || '일반'})</span>
                         <div class="flex gap-3">
-                            <a href="tel:${c.phone?.replace(/[^0-9]/g,'')}" class="w-14 h-14 bg-white/20 rounded-[20px] flex items-center justify-center text-white"><i class="fa-solid fa-phone"></i></a>
-                            <a href="sms:${c.phone?.replace(/[^0-9]/g,'')}" class="w-14 h-14 bg-white/20 rounded-[20px] flex items-center justify-center text-white"><i class="fa-solid fa-message"></i></a>
+                            <a href="tel:${c.phone?.replace(/[^0-9]/g,'')}" class="w-14 h-14 bg-white/20 rounded-[20px] flex items-center justify-center text-white shadow-xl"><i class="fa-solid fa-phone text-lg"></i></a>
+                            <a href="sms:${c.phone?.replace(/[^0-9]/g,'')}" class="w-14 h-14 bg-white/20 rounded-[20px] flex items-center justify-center text-white shadow-xl"><i class="fa-solid fa-message text-lg"></i></a>
                         </div>
                     </div>
                 `).join('');
@@ -439,7 +444,7 @@
                                     <h4 class="font-black text-slate-800 text-2xl leading-tight flex items-center gap-2 ${c.isCompleted ? 'text-completed' : ''}">
                                         ${c.name} ${isLate ? '<span class="w-3 h-3 bg-red-500 rounded-full animate-ping"></span>' : ''}
                                     </h4>
-                                    <p class="text-[14px] font-bold text-slate-400 font-mono tracking-tighter mt-1">${formatPhone(c.phone || 'no phone')}</p>
+                                    <p class="text-[14px] font-bold text-slate-400 font-mono mt-1">${formatPhone(c.phone || 'no phone')}</p>
                                 </div>
                             </div>
                             <div class="flex flex-col items-end gap-2">
@@ -478,7 +483,7 @@
             });
         };
 
-        // 로직 함수들
+        // 제어 함수들
         window.toggleComplete = async (id, e) => {
             e.stopPropagation();
             const c = customers.find(item => item.id === id);
@@ -491,8 +496,8 @@
 
         window.deleteCustomer = async function(id) { 
             const c = customers.find(item => item.id === id); 
-            if (c.category === '긴급' && !c.isCompleted) return alert("긴급 관리 건은 완료 처리 후 삭제가 가능합니다.");
-            if (confirm('삭제하시겠습니까?')) { 
+            if (c.category === '긴급' && !c.isCompleted) return alert("긴급 건은 완료 처리 후 삭제가 가능합니다.");
+            if (confirm('영구 삭제하시겠습니까?')) { 
                 if (db && currentUser) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id)); 
                 else { customers = customers.filter(item => item.id !== id); saveToStorage(); render(); } 
             } 
@@ -530,7 +535,7 @@
             const reader = new FileReader();
             reader.onload = async () => {
                 const base64Data = reader.result.split(',')[1];
-                const prompt = "이미지에서 {name, phone, notes} 추출 JSON 배열로만 응답하세요.";
+                const prompt = "이미지에서 {name, phone, notes} 추출 JSON 배열로만 응답하세요. 번호 8자리인 경우 앞에 010을 추가하세요.";
                 try {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                         method: 'POST',
@@ -538,10 +543,11 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64Data } }] }] })
                     });
                     const result = await res.json();
-                    const jsonMatch = result.candidates?.[0]?.content?.parts?.[0]?.text.match(/\[[\s\S]*\]/);
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    const jsonMatch = text.match(/\[[\s\S]*\]/);
                     if (jsonMatch) {
                         const extracted = JSON.parse(jsonMatch[0]);
-                        for (const data of extracted) await smartSaveOrUpdate({ ...data, category: '연락', product: '미지정', nextContactDate: '' });
+                        for (const item of extracted) await smartSaveOrUpdate({ ...item, category: '연락', product: '미지정', nextContactDate: '' });
                     }
                 } finally { loader.classList.add('hidden'); }
             };
