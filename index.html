@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Pro v14.0 (AI Vision Edition)</title>
+    <title>CRM Pro v14.0 (Hi-Mart Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@
         <div class="w-full max-w-[320px] text-center space-y-8">
             <div class="space-y-2">
                 <h1 class="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">CRM</h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">AI Vision Edition</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Hi-Mart MegaStore Edition</p>
             </div>
             <form onsubmit="event.preventDefault(); window.loginCRM();" class="space-y-3">
                 <input type="email" id="loginEmail" autocomplete="username" required
@@ -70,11 +70,14 @@
     <div id="main-app" class="hidden">
         <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 p-4 px-5 flex justify-between items-center shadow-sm">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center font-black italic shadow-lg">C</div>
-                <h1 class="text-xl font-black tracking-tighter uppercase italic text-slate-900">CRM PRO</h1>
+                <div class="w-8 h-8 bg-red-600 text-white rounded-lg flex items-center justify-center font-black italic shadow-md">H</div>
+                <div>
+                    <h1 class="text-base font-black tracking-tight text-slate-900 leading-tight">하이마트 울산점 CRM</h1>
+                    <p class="text-[8px] font-bold text-slate-400">매니저 박정근 전용 견적 시스템</p>
+                </div>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="window.promptApiKey()" title="AI API 키 설정" class="w-8 h-8 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center active-scale">
+                <button onclick="window.promptApiKey()" title="Gemini API Key 설정" class="w-8 h-8 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center active-scale">
                     <i class="fa-solid fa-key text-xs"></i>
                 </button>
                 <button onclick="window.logoutCRM()" title="로그아웃" class="w-8 h-8 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center active-scale">
@@ -139,7 +142,7 @@
     <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col">
         <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="window.closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 / 견적 정보</h2>
+            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">견적 및 고객 정보</h2>
             <button id="saveBtn" onclick="window.saveCustomer()" class="text-blue-600 font-black px-4 text-lg">완료</button>
         </div>
         <div class="p-5 space-y-6 overflow-y-auto pb-40 no-scrollbar text-left">
@@ -153,38 +156,38 @@
                     </button>
                 </div>
                 <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-16 shadow-inner" 
-                    placeholder="예: 박정근 00000000 냉장고 (입력 즉시 아래에 자동 분류)" oninput="window.fastKeywordParse()"></textarea>
+                    placeholder="예: 박정근 01091075798 냉장고 (입력 즉시 아래에 자동 분류)" oninput="window.fastKeywordParse()"></textarea>
             </div>
 
             <!-- 사진 첨부 및 AI 자동 견적 분석기 -->
-            <div class="space-y-1">
+            <div class="space-y-2">
                 <div class="flex justify-between items-center ml-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase">POS/견적서 사진 업로드</label>
-                    <span id="aiLoadingStatus" class="text-[10px] font-bold text-blue-600 hidden animate-pulse">
-                        <i class="fa-solid fa-sparkles mr-1"></i>AI가 견적서를 분석 중입니다...
+                    <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider">POS 장바구니 / 견적서 사진</label>
+                    <span id="aiLoadingStatus" class="text-[10px] font-bold text-red-600 hidden animate-pulse">
+                        <i class="fa-solid fa-spinner fa-spin mr-1"></i>울산점 AI 견적서 생성 중...
                     </span>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <label for="formPhoto" class="flex-1 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-dashed border-blue-200 rounded-2xl p-4 text-center cursor-pointer active-scale shadow-sm hover:border-blue-400 transition-all">
-                        <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm">
+                    <label for="formPhoto" class="flex-1 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-dashed border-red-200 rounded-2xl p-4 text-center cursor-pointer active-scale shadow-sm hover:border-red-400 transition-all">
+                        <div class="w-10 h-10 bg-white text-red-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm">
                             <i class="fa-solid fa-camera text-base"></i>
                         </div>
-                        <p class="text-xs text-blue-900 font-black">POS / 견적 사진 한 장 업로드</p>
-                        <p class="text-[10px] text-blue-500 font-medium mt-0.5">AI가 품목·정상가·결제가·체감가를 분석해 견적서를 완성합니다</p>
+                        <p class="text-xs text-red-950 font-black">POS 화면 사진 올리기</p>
+                        <p class="text-[10px] text-red-600 font-semibold mt-0.5">울산점 표준 규격 [가전 구매 견적서]로 100% 자동 변환</p>
                     </label>
                     <input type="file" id="formPhoto" accept="image/*" class="hidden" onchange="window.handlePhotoSelect(event)">
                 </div>
                 <img id="photo-preview-img" class="photo-preview" src="">
             </div>
 
-            <div class="grid grid-cols-2 gap-3 pt-2">
+            <div class="grid grid-cols-2 gap-3 pt-1">
                 <div class="space-y-1">
                     <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">성함</label>
-                    <input id="formName" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:bg-white shadow-sm" placeholder="이름">
+                    <input id="formName" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:bg-white shadow-sm" placeholder="고객 성함">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">연락처</label>
-                    <input id="formPhone" type="tel" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-base outline-none focus:bg-white shadow-sm" placeholder="번호 입력">
+                    <input id="formPhone" type="tel" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-base outline-none focus:bg-white shadow-sm" placeholder="연락처">
                 </div>
             </div>
             
@@ -202,7 +205,7 @@
                     </select>
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">예정일 (상담/방문)</label>
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">예정일 (상담/입주/방문)</label>
                     <input type="date" id="formScheduledDate" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none shadow-sm">
                 </div>
             </div>
@@ -210,15 +213,20 @@
             <div class="space-y-1">
                 <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">진행 단계</label>
                 <select id="formCategory" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none shadow-sm">
-                    <option value="미연락">미연락</option>
                     <option value="상담진행">상담진행</option>
+                    <option value="미연락">미연락</option>
                     <option value="사은품">사은품</option>
                 </select>
             </div>
 
             <div class="space-y-1">
-                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">상담 및 AI 생성 견적서</label>
-                <textarea id="formNotes" rows="9" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-mono font-medium outline-none focus:bg-white shadow-inner leading-relaxed" placeholder="사진을 올리시면 AI가 완성한 구매 견적서가 이곳에 자동으로 채워집니다."></textarea>
+                <div class="flex justify-between items-center ml-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">상담 및 [가전 구매 견적서]</label>
+                    <button type="button" onclick="window.copyNotes()" class="text-[10px] font-bold text-blue-600 hover:underline">
+                        <i class="fa-regular fa-copy mr-1"></i>견적서 복사
+                    </button>
+                </div>
+                <textarea id="formNotes" rows="12" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-mono font-medium outline-none focus:bg-white shadow-inner leading-relaxed" placeholder="사진을 올리면 하이마트 메가스토어 울산점 공식 견적서가 자동으로 채워집니다."></textarea>
             </div>
         </div>
         <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 shadow-2xl">
@@ -238,7 +246,6 @@
         </div>
     </div>
 
-    <!-- 스크립트 모듈: Firebase v11 + Gemini 1.5 Flash Vision 직접 연동 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -267,18 +274,22 @@
         let attachedPhoto = "";
         let unsubscribeFirestore = null;
 
-        // Gemini API 키 관리 (로컬 저장소)
-        window.getGeminiKey = function() {
-            return localStorage.getItem('gemini_api_key') || "";
-        };
+        // API 키 설정
+        window.getGeminiKey = () => (localStorage.getItem('gemini_api_key') || "").trim();
 
-        window.promptApiKey = function() {
-            const current = window.getGeminiKey();
-            const key = prompt("Google AI Studio에서 발급받은 Gemini API Key를 입력하세요:", current);
+        window.promptApiKey = () => {
+            const cur = window.getGeminiKey();
+            const key = prompt("Google AI Studio의 Gemini API Key를 입력하세요:\n(빈칸이면 초기화)", cur);
             if (key !== null) {
                 localStorage.setItem('gemini_api_key', key.trim());
-                alert("API 키가 저장되었습니다. 이제 POS 사진 업로드 시 AI가 자동 견적서를 생성합니다.");
+                alert(key.trim() ? "API Key가 안전하게 브라우저에 저장되었습니다!" : "API Key가 삭제되었습니다.");
             }
+        };
+
+        window.copyNotes = () => {
+            const val = document.getElementById('formNotes').value;
+            if(!val) return alert("복사할 견적 내용이 없습니다.");
+            navigator.clipboard.writeText(val).then(() => alert("견적서가 클립보드에 복사되었습니다! 카카오톡 등에 바로 붙여넣기 하세요."));
         };
 
         // 인증 상태 감시자
@@ -306,108 +317,80 @@
             }
         });
 
-        // 1. 이메일 로그인 처리
         window.loginCRM = async function() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const errEl = document.getElementById('login-error');
             const btn = document.getElementById('loginBtn');
-            
             errEl.classList.add('hidden');
             btn.disabled = true;
             btn.innerText = "접속 중...";
-
             try {
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (err) {
                 errEl.classList.remove('hidden');
                 errEl.innerText = "이메일 또는 비밀번호가 올바르지 않습니다.";
-                console.error("로그인 실패:", err);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "로그인";
             }
         };
 
-        // 2. 로그아웃
         window.logoutCRM = async function() {
-            if (confirm("로그아웃 하시겠습니까?")) {
-                await signOut(auth);
-            }
+            if (confirm("로그아웃 하시겠습니까?")) await signOut(auth);
         };
 
-        // 3. 키워드 및 음성 자동 완성
+        // 키워드 파서
         window.fastKeywordParse = function() {
             const input = document.getElementById('smartInput').value.trim();
             if (!input) return;
-
             const words = input.split(/\s+/);
-            let extractedName = "";
-            let extractedPhone = "";
-            let extractedProduct = "미지정";
-
+            let name = "", phone = "", product = "미지정";
             const pMap = {
-                '티비': ['티비', 'TV', 'tv', '텔레비전', '올레드', 'oled', 'qled', 'KQ', 'OLED'],
-                '냉장고': ['냉장고', '비스포크', '오브제', '김치냉장고', '김냉', 'RF', 'M87'],
-                '에어컨': ['에어컨', '무풍', '시스템에어컨', '스탠드', 'AF'],
-                '혼수 가전': ['혼수', '이사', '입주', '전체', '웨딩', '패키지'],
-                '식기세척기': ['식세기', '식기세척기', 'DW', 'DUB'],
-                '세탁건조기': ['세탁기', '건조기', '워시타워', '원바디', '세탁건조기', 'WF', 'FX']
+                '티비': ['티비', 'TV', 'tv', '올레드', 'oled', 'qled', 'KQ'],
+                '냉장고': ['냉장고', '비스포크', '오브제', '김치냉장고', '김냉', 'RF'],
+                '에어컨': ['에어컨', '무풍', '시스템에어컨', 'AF'],
+                '혼수 가전': ['혼수', '이사', '입주', '전체', '웨딩'],
+                '식기세척기': ['식세기', '식기세척기', 'DW'],
+                '세탁건조기': ['세탁기', '건조기', '워시타워', '원바디', '세탁건조기', 'WF']
             };
-
             words.forEach(word => {
-                const numericOnly = word.replace(/[^0-9]/g, '');
-
-                if (!extractedPhone && (numericOnly.length >= 7 || word.startsWith('010'))) {
-                    extractedPhone = word;
-                    return;
+                const num = word.replace(/[^0-9]/g, '');
+                if (!phone && (num.length >= 7 || word.startsWith('010'))) { phone = word; return; }
+                for (const [pk, kws] of Object.entries(pMap)) {
+                    if (kws.some(k => word.toLowerCase().includes(k.toLowerCase()))) { product = pk; return; }
                 }
-
-                let matched = false;
-                for (const [prodKey, keywords] of Object.entries(pMap)) {
-                    if (keywords.some(k => word.toLowerCase().includes(k.toLowerCase()))) {
-                        extractedProduct = prodKey;
-                        matched = true;
-                        break;
-                    }
-                }
-                if (matched) return;
-
-                if (!extractedName && /^[가-힣]{2,4}$/.test(word) && !['고객', '견적', '합계', '결제', '체감'].includes(word)) {
-                    extractedName = word;
-                    return;
-                }
+                if (!name && /^[가-힣]{2,4}$/.test(word) && !['고객', '견적', '합계', '결제', '체감'].includes(word)) { name = word; }
             });
-
-            if (extractedName && !document.getElementById('formName').value) document.getElementById('formName').value = extractedName;
-            if (extractedPhone && !document.getElementById('formPhone').value) document.getElementById('formPhone').value = extractedPhone;
-            if (extractedProduct !== "미지정") document.getElementById('formProduct').value = extractedProduct;
+            if (name) document.getElementById('formName').value = name;
+            if (phone) document.getElementById('formPhone').value = phone;
+            if (product !== "미지정") document.getElementById('formProduct').value = product;
             document.getElementById('formNotes').value = input;
         };
 
         window.startVoiceRecognition = function() {
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRec) return alert("현재 브라우저는 음성 인식을 지원하지 않습니다.");
-            const recognition = new SpeechRec();
-            recognition.lang = 'ko-KR';
+            const rec = new SpeechRec();
+            rec.lang = 'ko-KR';
             const btn = document.getElementById('mic-btn');
-            recognition.onstart = () => { btn.classList.replace('bg-blue-600', 'bg-red-500'); btn.classList.add('animate-pulse'); };
-            recognition.onend = () => { btn.classList.replace('bg-red-500', 'bg-blue-600'); btn.classList.remove('animate-pulse'); };
-            recognition.onresult = (e) => {
-                const text = e.results[0][0].transcript;
-                document.getElementById('smartInput').value = text;
+            rec.onstart = () => { btn.classList.replace('bg-blue-600', 'bg-red-500'); btn.classList.add('animate-pulse'); };
+            rec.onend = () => { btn.classList.replace('bg-red-500', 'bg-blue-600'); btn.classList.remove('animate-pulse'); };
+            rec.onresult = (e) => {
+                document.getElementById('smartInput').value = e.results[0][0].transcript;
                 window.fastKeywordParse();
             };
-            recognition.start();
+            rec.start();
         };
 
-        // 4. [핵심] 사진 압축 + Gemini Vision을 통한 완벽한 견적서 생성
+        // [핵심] 사진 처리 및 울산점 공식 견적서 AI 추출 엔진
         window.handlePhotoSelect = function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const apiKey = window.getGeminiKey();
             if (!apiKey) {
+                alert("상단 열쇠(🔑) 아이콘을 눌러 Google Gemini API Key를 먼저 입력해주세요.");
                 window.promptApiKey();
                 if (!window.getGeminiKey()) return;
             }
@@ -419,96 +402,119 @@
             reader.onload = async (ev) => {
                 const img = new Image();
                 img.onload = async () => {
+                    // 해상도 조절 (Vision 모델 최적화 1200px)
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 900; 
+                    const MAX_WIDTH = 1200; 
                     let width = img.width, height = img.height;
                     if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    attachedPhoto = canvas.toDataURL('image/jpeg', 0.7);
+                    attachedPhoto = canvas.toDataURL('image/jpeg', 0.75);
                     const preview = document.getElementById('photo-preview-img');
                     preview.src = attachedPhoto; 
                     preview.style.display = 'block';
 
                     const base64Data = attachedPhoto.split(',')[1];
-                    
-                    // Gemini Vision API 호출
-                    try {
-                        const prompt = `당신은 롯데하이마트 메가스토어 울산점 가전 전문 매니저의 견적 비서입니다.
-첨부된 POS 장바구니/견적 화면 사진을 정밀 분석하여 다음 정보를 JSON 형식으로만 추출하고 깔끔한 견적서를 생성해주세요.
+                    const nowStr = new Date().toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
 
-응답은 반드시 아래 JSON 구조로만 출력하세요 (마크다운 백틱 없이 순수 JSON만 반환):
+                    // 울산점 전용 견적서 스킬 프롬프트
+                    const promptText = `너는 '롯데하이마트 메가스토어 울산점' 가전 전문 매니저 박정근의 공식 견적서 생성 AI다.
+첨부된 POS 장바구니/견적 화면 사진을 정밀하게 읽고 아래 JSON 규격으로만 응답하라.
+
+[작성 및 통합 규칙]
+1. 부속품 통합: 브라켓, 배관 분할행, 로봇청소기 스테이션, 미니워시 등 세부 부속품은 본체 1줄로 통합 표기한다.
+2. 무상보증(하이워런티): 패키지별 하이워런티 보장한도(예: 500만, 350만 등)가 파악되면 품목 설명에 명시한다.
+3. 금액 계산:
+   - 정상가 대비 총 혜택금액 및 할인율을 정확히 계산한다: ((정상가 - 최종체감가) / 정상가) * 100
+   - 과장된 표현 없이 담백하고 신뢰감 있는 톤을 유지한다.
+4. 견적생성일시: "${nowStr}" 표기.
+
+반드시 다른 설명 없이 아래 순수 JSON 포맷만 반환하라:
 {
-  "customerName": "고객명 (없으면 '고객')",
-  "customerPhone": "전화번호 (없으면 '')",
-  "representativeProduct": "티비, 냉장고, 에어컨, 혼수 가전, 식기세척기, 세탁건조기 중 가장 대표 품목 1개",
-  "quotationText": "고객에게 바로 전달 가능한 완성형 가전 견적서 텍스트"
-}
+  "customerName": "추출된 고객명 (없으면 '고객')",
+  "customerPhone": "추출된 연락처 (없으면 '')",
+  "representativeProduct": "티비, 냉장고, 에어컨, 혼수 가전, 식기세척기, 세탁건조기 중 대표 품목 1개",
+  "quotationText": "■ [가전 구매 견적서]\\n- 지점: 롯데하이마트 메가스토어 울산점\\n- 적용혜택: 제휴카드 + 울산점 특별혜택\\n■ 견적생성일시: ${nowStr}\\n\\n[선택 제품 및 세부내역]\\n- 제품명 | 모델코드 | 정상가 | 혜택 비고\\n\\n[금액 정산 안내]\\n① 정상가 합계: OO,OOO원\\n② 매장 결제금액: OO,OOO원\\n③ 제휴카드/캐시백 혜택: -OO,OOO원\\n④ 최종 체감가: OO,OOO원\\n(정상가 대비 총 OO,OOO원 혜택 / OO.O% 할인)\\n\\n* 상담 담당: 롯데하이마트 메가스토어 울산점 박정근 (☎ 010-9107-5798)\\n* 고객센터: 1588-0070"
+}`;
 
-[quotationText 작성 규격]
-■ [가전 구매 견적서]
-- 지점: 롯데하이마트 메가스토어 울산점
-- 적용혜택: 제휴카드 + 울산점 특별혜택
+                    // 모델 엔드포인트: 호환성 높은 v1beta 및 v1 fallback
+                    const modelEndpoints = [
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.getGeminiKey()}`,
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${window.getGeminiKey()}`
+                    ];
 
-[선택 제품 및 세부내역]
-- 품목명 | 모델명 | 정상가 (부속품은 본체 1줄로 통합)
+                    let success = false;
+                    let lastErrorMsg = "";
 
-[금액 정산 안내]
-① 정상가 합계: OO,OOO원
-② 매장 결제금액: OO,OOO원
-③ 제휴카드 및 특별 캐시백: -OO,OOO원
-④ 최종 체감가: OO,OOO원
-(정상가 대비 총 OO원 혜택)
+                    for (const url of modelEndpoints) {
+                        try {
+                            const res = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{
+                                        parts: [
+                                            { text: promptText },
+                                            { inline_data: { mime_type: "image/jpeg", data: base64Data } }
+                                        ]
+                                    }],
+                                    generationConfig: { 
+                                        response_mime_type: "application/json",
+                                        temperature: 0.1
+                                    }
+                                })
+                            });
 
-* 상담 담당: 롯데하이마트 메가스토어 울산점 박정근 (☎ 010-9107-5798)`;
+                            if (!res.ok) {
+                                const errDetail = await res.json().catch(() => ({}));
+                                lastErrorMsg = `HTTP ${res.status}: ${errDetail?.error?.message || res.statusText}`;
+                                continue;
+                            }
 
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.getGeminiKey()}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{
-                                    parts: [
-                                        { text: prompt },
-                                        { inline_data: { mime_type: "image/jpeg", data: base64Data } }
-                                    ]
-                                }],
-                                generationConfig: { response_mime_type: "application/json" }
-                            })
-                        });
+                            const resData = await res.json();
+                            const rawOutput = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (!rawOutput) throw new Error("AI 응답 내용이 비어 있습니다.");
 
-                        const resData = await response.json();
-                        const resultText = resData.candidates[0].content.parts[0].text;
-                        const parsed = JSON.parse(resultText);
+                            // JSON 파싱 (코드블록 감싸진 경우 대비)
+                            const cleanJson = rawOutput.replace(/```json/gi, '').replace(/```/g, '').trim();
+                            const parsed = JSON.parse(cleanJson);
 
-                        if (parsed.customerName && parsed.customerName !== '고객') {
-                            document.getElementById('formName').value = parsed.customerName;
+                            if (parsed.customerName && parsed.customerName !== '고객') {
+                                document.getElementById('formName').value = parsed.customerName;
+                            }
+                            if (parsed.customerPhone) {
+                                document.getElementById('formPhone').value = parsed.customerPhone;
+                            }
+                            if (parsed.representativeProduct) {
+                                document.getElementById('formProduct').value = parsed.representativeProduct;
+                            }
+                            if (parsed.quotationText) {
+                                document.getElementById('formNotes').value = parsed.quotationText;
+                            }
+
+                            success = true;
+                            alert("✅ 울산점 공식 견적서가 생성되었습니다! 하단의 [완료]를 눌러 저장하세요.");
+                            break;
+                        } catch (err) {
+                            lastErrorMsg = err.message;
                         }
-                        if (parsed.customerPhone) {
-                            document.getElementById('formPhone').value = parsed.customerPhone;
-                        }
-                        if (parsed.representativeProduct) {
-                            document.getElementById('formProduct').value = parsed.representativeProduct;
-                        }
-                        if (parsed.quotationText) {
-                            document.getElementById('formNotes').value = parsed.quotationText;
-                        }
-
-                        alert("✨ AI 견적서가 자동으로 완성되었습니다! 내용을 확인 후 저장하세요.");
-                    } catch (err) {
-                        console.error("Gemini Vision 오류:", err);
-                        alert("AI 견적 분석 실패: API 키 또는 네트워크 상태를 확인해주세요. (상세 오류 콘솔 참조)");
-                    } finally {
-                        loadingEl.classList.add('hidden');
                     }
+
+                    if (!success) {
+                        console.error("AI 분석 최종 오류:", lastErrorMsg);
+                        alert(`❌ AI 견적서 분석 실패\n\n원인: ${lastErrorMsg}\n\n상단 열쇠(🔑) 아이콘을 눌러 API Key가 유효한지 다시 확인해주세요.`);
+                    }
+
+                    loadingEl.classList.add('hidden');
                 };
                 img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         };
 
-        // 5. 메인 리스트 렌더링
+        // 렌더링
         window.render = function() {
             const container = document.getElementById('customerList');
             if (!container) return;
@@ -536,11 +542,11 @@
             });
 
             document.getElementById('totalBadge').innerText = `${filtered.length} 명`;
-            container.innerHTML = filtered.length ? '' : '<div class="py-20 text-slate-300 font-bold text-sm text-center">등록된 고객이 없습니다.</div>';
+            container.innerHTML = filtered.length ? '' : '<div class="py-20 text-slate-300 font-bold text-sm text-center">등록된 견적이 없습니다.</div>';
 
             filtered.forEach(c => {
                 const isUrgent = c.isUrgent === true;
-                const cOpts = ['미연락', '상담진행', '사은품'].map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
+                const cOpts = ['상담진행', '미연락', '사은품'].map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
                 const dateHtml = c.scheduledDate ? `<span class="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-md font-black mr-2">${c.scheduledDate} 일정</span>` : '';
                 const imgHtml = c.photo ? `<img src="${c.photo}" class="card-photo" onclick="window.showFullImage('${c.photo}')">` : '';
 
@@ -550,7 +556,7 @@
                             <div class="text-left flex-1 overflow-hidden">
                                 <h4 class="font-black text-slate-800 text-lg truncate flex items-center">
                                     ${isUrgent ? '<span class="urgent-tag">긴급</span>' : ''}
-                                    ${c.name || '고객명 미입력'}
+                                    ${c.name || '고객'}
                                 </h4>
                                 <p class="text-[11px] font-bold text-slate-400 font-mono tracking-tight">${c.phone || '연락처 없음'}</p>
                             </div>
@@ -571,7 +577,7 @@
                         <div class="memo-box mb-4">
                             <textarea onblur="window.fastUpdate('${c.id}', 'notes', this.value)" 
                                 class="w-full text-xs font-mono font-medium text-slate-700 leading-relaxed bg-transparent border-none outline-none resize-none placeholder-slate-300" 
-                                placeholder="견적 메모..." rows="4">${c.notes || ''}</textarea>
+                                placeholder="견적서..." rows="5">${c.notes || ''}</textarea>
                         </div>
                         
                         <div class="flex gap-2">
@@ -590,7 +596,7 @@
             });
         };
 
-        // 6. 고객 저장
+        // 저장
         window.saveCustomer = async () => {
             if (!currentUser) return alert("로그인이 필요합니다.");
             const name = document.getElementById('formName').value.trim();
@@ -620,7 +626,6 @@
             window.showToast();
         };
 
-        // 7. 빠른 인라인 업데이트
         window.fastUpdate = async (id, field, value) => {
             if (!currentUser) return;
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', id);
@@ -674,7 +679,7 @@
             document.getElementById('formProduct').value = c.product || '미지정'; 
             document.getElementById('formScheduledDate').value = c.scheduledDate || ''; 
             document.getElementById('formNotes').value = c.notes || ''; 
-            document.getElementById('formCategory').value = c.category || '미연락';
+            document.getElementById('formCategory').value = c.category || '상담진행';
             if(c.photo) { 
                 attachedPhoto = c.photo; 
                 document.getElementById('photo-preview-img').src = c.photo; 
