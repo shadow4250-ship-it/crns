@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Pro v14.0 (Hi-Mart Edition)</title>
+    <title>CRM Pro v14.0 (Hi-Mart MegaStore Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@
         <div class="w-full max-w-[320px] text-center space-y-8">
             <div class="space-y-2">
                 <h1 class="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">CRM</h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Hi-Mart MegaStore Edition</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">MegaStore Ulsan Edition</p>
             </div>
             <form onsubmit="event.preventDefault(); window.loginCRM();" class="space-y-3">
                 <input type="email" id="loginEmail" autocomplete="username" required
@@ -383,7 +383,7 @@
             rec.start();
         };
 
-        // [핵심] 사진 처리 및 울산점 공식 견적서 AI 추출 엔진
+        // [핵심] 사진 처리 및 울산점 공식 견적서 AI 추출 엔진 (엔드포인트 404 해결)
         window.handlePhotoSelect = function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -402,16 +402,15 @@
             reader.onload = async (ev) => {
                 const img = new Image();
                 img.onload = async () => {
-                    // 해상도 조절 (Vision 모델 최적화 1200px)
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 1200; 
+                    const MAX_WIDTH = 1000; 
                     let width = img.width, height = img.height;
                     if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    attachedPhoto = canvas.toDataURL('image/jpeg', 0.75);
+                    attachedPhoto = canvas.toDataURL('image/jpeg', 0.7);
                     const preview = document.getElementById('photo-preview-img');
                     preview.src = attachedPhoto; 
                     preview.style.display = 'block';
@@ -419,7 +418,6 @@
                     const base64Data = attachedPhoto.split(',')[1];
                     const nowStr = new Date().toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
 
-                    // 울산점 전용 견적서 스킬 프롬프트
                     const promptText = `너는 '롯데하이마트 메가스토어 울산점' 가전 전문 매니저 박정근의 공식 견적서 생성 AI다.
 첨부된 POS 장바구니/견적 화면 사진을 정밀하게 읽고 아래 JSON 규격으로만 응답하라.
 
@@ -439,10 +437,10 @@
   "quotationText": "■ [가전 구매 견적서]\\n- 지점: 롯데하이마트 메가스토어 울산점\\n- 적용혜택: 제휴카드 + 울산점 특별혜택\\n■ 견적생성일시: ${nowStr}\\n\\n[선택 제품 및 세부내역]\\n- 제품명 | 모델코드 | 정상가 | 혜택 비고\\n\\n[금액 정산 안내]\\n① 정상가 합계: OO,OOO원\\n② 매장 결제금액: OO,OOO원\\n③ 제휴카드/캐시백 혜택: -OO,OOO원\\n④ 최종 체감가: OO,OOO원\\n(정상가 대비 총 OO,OOO원 혜택 / OO.O% 할인)\\n\\n* 상담 담당: 롯데하이마트 메가스토어 울산점 박정근 (☎ 010-9107-5798)\\n* 고객센터: 1588-0070"
 }`;
 
-                    // 모델 엔드포인트: 호환성 높은 v1beta 및 v1 fallback
+                    // 검증된 정식 모델 엔드포인트 순차 시도
                     const modelEndpoints = [
-                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.getGeminiKey()}`,
-                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${window.getGeminiKey()}`
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.getGeminiKey()}`,
+                        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${window.getGeminiKey()}`
                     ];
 
                     let success = false;
@@ -477,7 +475,6 @@
                             const rawOutput = resData.candidates?.[0]?.content?.parts?.[0]?.text;
                             if (!rawOutput) throw new Error("AI 응답 내용이 비어 있습니다.");
 
-                            // JSON 파싱 (코드블록 감싸진 경우 대비)
                             const cleanJson = rawOutput.replace(/```json/gi, '').replace(/```/g, '').trim();
                             const parsed = JSON.parse(cleanJson);
 
