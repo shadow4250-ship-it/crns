@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Pro v15.0 (견적관리 탭 에디션)</title>
+    <title>CRM Pro v15.0 (견적관리 + 원터치 문자 발송)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -107,7 +107,7 @@
             </div>
         </div>
 
-        <!-- 탭 필터 (견적관리 탭 추가) -->
+        <!-- 탭 필터 -->
         <nav class="sticky top-[69px] z-30 bg-white border-b border-slate-100 flex shadow-sm overflow-x-auto no-scrollbar">
             <button onclick="window.setCategory('전체')" id="tab-전체" class="flex-none px-4 py-4 text-xs tracking-tighter transition-all tab-active">전체</button>
             <button onclick="window.setCategory('견적관리')" id="tab-견적관리" class="flex-none px-4 py-4 text-xs tracking-tighter transition-all tab-inactive">
@@ -145,9 +145,9 @@
         <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="window.closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
             <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 및 기본 정보</h2>
-            <button id="saveBtn" onclick="window.saveCustomer()" class="text-blue-600 font-black px-4 text-lg">완료</button>
+            <button id="saveBtn" onclick="window.saveCustomer(false)" class="text-blue-600 font-black px-4 text-lg">완료</button>
         </div>
-        <div class="p-5 space-y-5 overflow-y-auto pb-40 no-scrollbar text-left">
+        <div class="p-5 space-y-5 overflow-y-auto pb-48 no-scrollbar text-left">
             
             <!-- 음성 및 텍스트 자동 분류 -->
             <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 space-y-2 shadow-sm" id="smartInputContainer">
@@ -158,7 +158,7 @@
                     </button>
                 </div>
                 <textarea id="smartInput" class="w-full p-3 bg-white border border-blue-100 rounded-xl text-sm font-bold outline-none h-14 shadow-inner" 
-                    placeholder="예: 홍길동 01012345678 에어컨" oninput="window.fastKeywordParse()"></textarea>
+                    placeholder="예: 홍길동 12345678 에어컨 (010 자동 보정)" oninput="window.fastKeywordParse()"></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-3 pt-1">
@@ -167,8 +167,8 @@
                     <input id="formName" class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl font-black text-base outline-none focus:bg-white shadow-sm" placeholder="고객 성함">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">연락처</label>
-                    <input id="formPhone" type="tel" class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-base outline-none focus:bg-white shadow-sm" placeholder="연락처">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">연락처 (010 자동완성)</label>
+                    <input id="formPhone" type="tel" onblur="window.formatPhoneInput(this)" class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-base outline-none focus:bg-white shadow-sm font-mono" placeholder="예: 91075798 또는 전체">
                 </div>
             </div>
             
@@ -214,16 +214,23 @@
             </div>
 
             <div class="space-y-1">
-                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">일반 상담 메모</label>
-                <textarea id="formNotes" rows="4" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold outline-none focus:bg-white shadow-inner" placeholder="기본 상담 내용..."></textarea>
+                <label class="text-[10px] font-black text-slate-400 ml-1 uppercase tracking-widest">상담 및 견적 메모 (문자 발송 내용)</label>
+                <textarea id="formNotes" rows="5" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-mono font-medium outline-none focus:bg-white shadow-inner leading-relaxed" placeholder="상담 내용 또는 견적 텍스트를 입력하세요."></textarea>
             </div>
         </div>
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 shadow-2xl">
-            <button onclick="window.saveCustomer()" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-lg text-base active-scale uppercase tracking-widest">저장하기</button>
+
+        <!-- 하단 2버튼: 일반 저장 vs 저장 및 즉시 문자 발송 -->
+        <div class="fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-100 shadow-2xl flex gap-2">
+            <button onclick="window.saveCustomer(false)" class="flex-1 py-4 bg-slate-100 text-slate-800 rounded-2xl font-black shadow text-sm active-scale">
+                저장만 하기
+            </button>
+            <button onclick="window.saveCustomer(true)" class="flex-[1.4] py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg text-sm active-scale flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-paper-plane text-xs"></i> 저장 후 바로 문자발송
+            </button>
         </div>
     </div>
 
-    <!-- [4] 견적 추가 모달 (차수별 누적) -->
+    <!-- [4] 견적 추가 모달 -->
     <div id="quoteModal" class="fixed inset-0 z-[120] bg-white hidden flex flex-col">
         <div class="p-4 border-b flex justify-between items-center bg-purple-50">
             <button onclick="window.closeQuoteModal()" class="p-2 text-purple-600 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
@@ -231,9 +238,9 @@
                 <h2 class="font-black text-base text-purple-950">새 견적 등록</h2>
                 <p id="quoteTargetName" class="text-[10px] text-purple-600 font-bold"></p>
             </div>
-            <button onclick="window.saveNewQuote()" class="text-purple-600 font-black px-4 text-lg">추가</button>
+            <button onclick="window.saveNewQuote(false)" class="text-purple-600 font-black px-4 text-lg">추가</button>
         </div>
-        <div class="p-5 space-y-4 overflow-y-auto pb-40 no-scrollbar text-left">
+        <div class="p-5 space-y-4 overflow-y-auto pb-48 no-scrollbar text-left">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                     <label class="text-[10px] font-black text-slate-400 ml-1 uppercase">견적 차수</label>
@@ -247,7 +254,7 @@
 
             <div class="space-y-1">
                 <div class="flex justify-between items-center ml-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">견적서 전문 (Gemini 생성 텍스트 붙여넣기)</label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">견적서 전문 (문자 발송 내용)</label>
                     <button type="button" onclick="window.pasteFromClipboard()" class="text-[10px] font-bold text-purple-600 hover:underline">
                         <i class="fa-regular fa-paste mr-1"></i>클립보드 붙여넣기
                     </button>
@@ -256,8 +263,14 @@
                     placeholder="채팅방에서 Gemini가 생성해준 [가전 구매 견적서] 텍스트를 이곳에 그대로 붙여넣으세요."></textarea>
             </div>
         </div>
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 shadow-2xl">
-            <button onclick="window.saveNewQuote()" class="w-full py-4 bg-purple-600 text-white rounded-2xl font-black shadow-lg text-base active-scale uppercase tracking-widest">견적 저장하기</button>
+
+        <div class="fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-100 shadow-2xl flex gap-2">
+            <button onclick="window.saveNewQuote(false)" class="flex-1 py-4 bg-slate-100 text-slate-800 rounded-2xl font-black shadow text-sm active-scale">
+                견적 저장만
+            </button>
+            <button onclick="window.saveNewQuote(true)" class="flex-[1.4] py-4 bg-purple-600 text-white rounded-2xl font-black shadow-lg text-sm active-scale flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-paper-plane text-xs"></i> 견적 저장 후 문자발송
+            </button>
         </div>
     </div>
 
@@ -301,6 +314,46 @@
         let deletingId = null;
         let attachedPhoto = "";
         let unsubscribeFirestore = null;
+
+        // [핵심] 전화번호 010 자동 보정 및 정규화 함수
+        window.normalizePhoneNumber = function(raw) {
+            if (!raw) return "";
+            const digits = raw.replace(/[^0-9]/g, '');
+            if (digits.length === 0) return "";
+
+            let full = digits;
+            // 7자리 또는 8자리 입력 시 앞에 010 자동 부착 (예: 91075798 -> 01091075798)
+            if (digits.length === 7 || digits.length === 8) {
+                full = '010' + digits;
+            } else if (!digits.startsWith('0') && digits.length >= 8) {
+                full = '010' + digits;
+            }
+
+            // 하이픈 포맷 적용 (010-XXXX-XXXX)
+            if (full.length === 11) {
+                return `${full.slice(0, 3)}-${full.slice(3, 7)}-${full.slice(7)}`;
+            } else if (full.length === 10) {
+                return `${full.slice(0, 3)}-${full.slice(3, 6)}-${full.slice(6)}`;
+            }
+            return full;
+        };
+
+        // 입력창 포커스 아웃 시 자동 보정
+        window.formatPhoneInput = function(inputEl) {
+            inputEl.value = window.normalizePhoneNumber(inputEl.value);
+        };
+
+        // 문자(SMS) 앱 실행 유틸리티
+        window.triggerSMS = function(phone, body) {
+            const clean = (phone || '').replace(/[^0-9]/g, '');
+            if (!clean) {
+                alert("연락처가 없어 문자를 발송할 수 없습니다.");
+                return;
+            }
+            const encoded = encodeURIComponent(body || '');
+            // 모바일 OS(Android, iOS) 공용 sms URI 스킴
+            window.location.href = `sms:${clean}?body=${encoded}`;
+        };
 
         // 인증 상태 감시자
         onAuthStateChanged(auth, (user) => {
@@ -350,12 +403,12 @@
             if (confirm("로그아웃 하시겠습니까?")) await signOut(auth);
         };
 
-        // 키워드 자동 분류
+        // 키워드 자동 분류 (010 누락 보정 탑재)
         window.fastKeywordParse = function() {
             const input = document.getElementById('smartInput').value.trim();
             if (!input) return;
             const words = input.split(/\s+/);
-            let name = "", phone = "", product = "미지정";
+            let name = "", rawPhone = "", product = "미지정";
             const pMap = {
                 '티비': ['티비', 'TV', 'tv', '올레드', 'oled', 'qled', 'KQ'],
                 '냉장고': ['냉장고', '비스포크', '오브제', '김치냉장고', '김냉', 'RF'],
@@ -366,14 +419,17 @@
             };
             words.forEach(word => {
                 const num = word.replace(/[^0-9]/g, '');
-                if (!phone && (num.length >= 7 || word.startsWith('010'))) { phone = word; return; }
+                if (!rawPhone && (num.length >= 7 || word.startsWith('010'))) { 
+                    rawPhone = word; 
+                    return; 
+                }
                 for (const [pk, kws] of Object.entries(pMap)) {
                     if (kws.some(k => word.toLowerCase().includes(k.toLowerCase()))) { product = pk; return; }
                 }
                 if (!name && /^[가-힣]{2,4}$/.test(word) && !['고객', '견적', '합계', '결제', '체감'].includes(word)) { name = word; }
             });
             if (name) document.getElementById('formName').value = name;
-            if (phone) document.getElementById('formPhone').value = phone;
+            if (rawPhone) document.getElementById('formPhone').value = window.normalizePhoneNumber(rawPhone);
             if (product !== "미지정") document.getElementById('formProduct').value = product;
             document.getElementById('formNotes').value = input;
         };
@@ -417,7 +473,6 @@
             reader.readAsDataURL(file);
         };
 
-        // 견적 추가 모달 제어
         window.openQuoteModal = (customerId) => {
             const c = customers.find(item => item.id === customerId);
             if (!c) return;
@@ -444,7 +499,8 @@
             }
         };
 
-        window.saveNewQuote = async () => {
+        // 견적 추가 및 즉시 문자 발송 지원
+        window.saveNewQuote = async (sendSms = false) => {
             if (!currentUser || !currentQuoteCustomerId) return;
             const c = customers.find(item => item.id === currentQuoteCustomerId);
             if (!c) return;
@@ -464,13 +520,18 @@
             };
 
             const existingQuotes = Array.isArray(c.quotes) ? c.quotes : [];
-            const updatedQuotes = [newQuoteItem, ...existingQuotes]; // 최신 견적이 위로
+            const updatedQuotes = [newQuoteItem, ...existingQuotes];
 
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', currentQuoteCustomerId);
             await setDoc(docRef, { quotes: updatedQuotes, updatedAt: new Date().toISOString() }, { merge: true });
 
             window.closeQuoteModal();
             window.showToast();
+
+            if (sendSms) {
+                const smsText = content || `[${title}] 최종 체감가: ${price}`;
+                window.triggerSMS(c.phone, smsText);
+            }
         };
 
         window.copyQuoteText = (text) => {
@@ -527,7 +588,6 @@
                 const dateHtml = c.scheduledDate ? `<span class="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-md font-black mr-2">${c.scheduledDate} 일정</span>` : '';
                 const imgHtml = c.photo ? `<img src="${c.photo}" class="card-photo" onclick="window.showFullImage('${c.photo}')">` : '';
                 
-                // 견적서 이력 렌더링
                 const quotesList = Array.isArray(c.quotes) ? c.quotes : [];
                 let quotesHtml = '';
                 if (quotesList.length > 0) {
@@ -547,10 +607,16 @@
                                         <p class="text-[11px] font-mono text-slate-600 whitespace-pre-wrap line-clamp-3 bg-white p-2 rounded-lg border border-slate-100">${q.content || '내용 없음'}</p>
                                         <div class="flex justify-between items-center mt-2 pt-1 border-t border-slate-200/50">
                                             <span class="text-[8px] text-slate-400 font-mono">${new Date(q.createdAt).toLocaleDateString()}</span>
-                                            <button onclick="window.copyQuoteText(\`${(q.content || '').replace(/`/g, '\\`').replace(/\\/g, '\\\\')}\`)" 
-                                                class="text-[10px] font-bold text-purple-600 hover:text-purple-800 active-scale flex items-center gap-1">
-                                                <i class="fa-regular fa-copy"></i> 카톡 전송용 복사
-                                            </button>
+                                            <div class="flex items-center gap-2">
+                                                <button onclick="window.copyQuoteText(\`${(q.content || '').replace(/`/g, '\\`').replace(/\\/g, '\\\\')}\`)" 
+                                                    class="text-[10px] font-bold text-slate-600 hover:text-slate-900 active-scale flex items-center gap-1">
+                                                    <i class="fa-regular fa-copy"></i> 복사
+                                                </button>
+                                                <button onclick="window.triggerSMS('${c.phone}', \`${(q.content || '').replace(/`/g, '\\`').replace(/\\/g, '\\\\')}\`)" 
+                                                    class="text-[10px] font-bold text-emerald-600 hover:text-emerald-800 active-scale flex items-center gap-1">
+                                                    <i class="fa-solid fa-paper-plane"></i> 문자발송
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -601,7 +667,7 @@
                         
                         <div class="flex gap-2 mt-4">
                             <a href="tel:${c.phone}" class="flex-[3] h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline shadow-md active-scale"><i class="fa-solid fa-phone text-xs"></i> 통화</a>
-                            <a href="sms:${c.phone}" class="flex-[3] h-11 bg-white border border-slate-200 text-slate-800 rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline shadow-sm active-scale"><i class="fa-solid fa-message text-xs text-slate-400"></i> 문자</a>
+                            <button onclick="window.triggerSMS('${c.phone}', '${(c.notes || '').replace(/'/g, "\\'")}')" class="flex-[3] h-11 bg-white border border-slate-200 text-slate-800 rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline shadow-sm active-scale"><i class="fa-solid fa-message text-xs text-slate-400"></i> 문자</button>
                             
                             <button onclick="window.editCustomer('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center active-scale">
                                 <i class="fa-solid fa-pen-to-square"></i>
@@ -615,21 +681,23 @@
             });
         };
 
-        // 고객 저장
-        window.saveCustomer = async () => {
+        // [핵심] 고객 저장 및 즉시 문자 발송 연동
+        window.saveCustomer = async (sendSms = false) => {
             if (!currentUser) return alert("로그인이 필요합니다.");
             const name = document.getElementById('formName').value.trim();
-            const phone = document.getElementById('formPhone').value.trim();
+            const rawPhone = document.getElementById('formPhone').value.trim();
             const notes = document.getElementById('formNotes').value.trim();
             
-            if (!name && !phone && !notes && !attachedPhoto) return alert("저장할 내용이 최소 하나는 있어야 합니다.");
+            if (!name && !rawPhone && !notes && !attachedPhoto) return alert("저장할 내용이 최소 하나는 있어야 합니다.");
 
-            const cleanPhone = phone.replace(/[^0-9]/g, '');
-            const docId = editingId || (cleanPhone.length >= 7 ? cleanPhone : 'c-' + Date.now());
+            // 010 자동 보정
+            const finalPhone = window.normalizePhoneNumber(rawPhone);
+            const cleanDigits = finalPhone.replace(/[^0-9]/g, '');
+            const docId = editingId || (cleanDigits.length >= 7 ? cleanDigits : 'c-' + Date.now());
             
             const payload = {
                 name: name || "고객",
-                phone: phone || "",
+                phone: finalPhone || "",
                 category: document.getElementById('formCategory').value,
                 product: document.getElementById('formProduct').value,
                 scheduledDate: document.getElementById('formScheduledDate').value,
@@ -643,6 +711,11 @@
             
             window.closeModal(); 
             window.showToast();
+
+            // 저장 후 즉시 문자 발송 트리거
+            if (sendSms) {
+                window.triggerSMS(finalPhone, notes);
+            }
         };
 
         window.fastUpdate = async (id, field, value) => {
