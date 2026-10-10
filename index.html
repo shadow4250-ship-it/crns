@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Pro v14.0</title>
+    <title>CRM Pro v14.0 (Cloud)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -30,13 +30,9 @@
         .urgent-card { border: 2.5px solid #ef4444 !important; background-color: #fffafb !important; box-shadow: 0 12px 28px rgba(239, 68, 68, 0.18); }
         .urgent-tag { background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; margin-right: 4px; }
         
-        /* 인라인 메모장 스타일 */
         .memo-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); text-align: left; overflow: hidden; transition: all 0.2s; }
         .memo-box:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: #fff; }
         
-        .loading-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
         #save-toast { display: none; position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 24px; border-radius: 50px; z-index: 500; font-size: 12px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         
         .photo-preview { width: 100%; height: 160px; object-fit: cover; border-radius: 16px; margin-top: 8px; display: none; border: 1px solid #e2e8f0; }
@@ -47,22 +43,26 @@
 
     <div id="save-toast">실시간 클라우드 동기화 완료</div>
 
-    <!-- [1] 보안 화면 (7604) -->
-    <div id="lock-screen" class="fixed inset-0 z-[300] bg-white flex flex-col items-center justify-center p-6 transition-all duration-300">
-        <div class="w-full max-w-[260px] text-center space-y-10">
-            <div class="space-y-1">
+    <!-- [1] Firebase 이메일 인증 화면 -->
+    <div id="lock-screen" class="fixed inset-0 z-[300] bg-white flex flex-col items-center justify-center p-6">
+        <div class="w-full max-w-[320px] text-center space-y-8">
+            <div class="space-y-2">
                 <h1 class="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">CRM</h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Inline Edit Edition</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Cloud Sync Edition</p>
             </div>
-            <div class="space-y-4">
-                <input type="password" id="passwordInput" inputmode="numeric" autofocus maxlength="4"
-                    onkeydown="if(event.key==='Enter') window.checkPassword()"
-                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-[28px] py-6 text-center text-4xl font-black outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner" 
-                    placeholder="••••">
-                <button onclick="window.checkPassword()" 
-                    class="w-full bg-slate-900 text-white py-5 rounded-[28px] font-black active-scale shadow-2xl text-lg uppercase tracking-wider">접속하기</button>
-            </div>
-            <p id="password-error" class="hidden text-red-500 text-xs font-bold animate-pulse">암호가 일치하지 않습니다.</p>
+            <form onsubmit="event.preventDefault(); window.loginCRM();" class="space-y-3">
+                <input type="email" id="loginEmail" autocomplete="username" required
+                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold outline-none focus:border-blue-500 focus:bg-white text-sm" 
+                    placeholder="이메일 계정">
+                <input type="password" id="loginPassword" autocomplete="current-password" required
+                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold outline-none focus:border-blue-500 focus:bg-white text-sm" 
+                    placeholder="비밀번호">
+                <button type="submit" id="loginBtn"
+                    class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black active-scale shadow-xl text-base uppercase tracking-wider">
+                    로그인
+                </button>
+            </form>
+            <p id="login-error" class="hidden text-red-500 text-xs font-bold animate-pulse"></p>
         </div>
     </div>
 
@@ -74,7 +74,10 @@
                 <h1 class="text-xl font-black tracking-tighter uppercase italic text-slate-900">CRM PRO</h1>
             </div>
             <div class="flex items-center gap-3">
-                <div id="sync-status" class="text-[9px] font-black text-slate-300 italic uppercase">Connecting</div>
+                <div id="sync-status" class="text-[9px] font-black text-emerald-500 italic uppercase">Cloud Online</div>
+                <button onclick="window.logoutCRM()" title="로그아웃" class="w-8 h-8 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center active-scale">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                </button>
                 <button onclick="window.openModal()" class="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg active-scale">
                     <i class="fa-solid fa-plus text-lg"></i>
                 </button>
@@ -130,14 +133,14 @@
         </main>
     </div>
 
-    <!-- 상세 입력 모달 (신규 등록 및 사진/날짜 등 무거운 수정용) -->
-    <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col animate-in slide-in-from-bottom duration-300">
+    <!-- 상세 입력 모달 -->
+    <div id="modal" class="fixed inset-0 z-[110] bg-white hidden flex flex-col">
         <div class="p-4 border-b flex justify-between items-center bg-slate-50">
             <button onclick="window.closeModal()" class="p-2 text-slate-400 active-scale"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 정보 (상세/신규)</h2>
+            <h2 id="modalTitle" class="font-black text-base text-slate-800 uppercase italic">고객 정보</h2>
             <button id="saveBtn" onclick="window.saveCustomer()" class="text-blue-600 font-black px-4 text-lg">완료</button>
         </div>
-        <div class="p-5 space-y-6 overflow-y-auto pb-60 no-scrollbar text-left">
+        <div class="p-5 space-y-6 overflow-y-auto pb-40 no-scrollbar text-left">
             
             <!-- 음성 및 키워드 자동 분류 -->
             <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100 space-y-3 shadow-sm" id="smartInputContainer">
@@ -148,7 +151,7 @@
                     </button>
                 </div>
                 <textarea id="smartInput" class="w-full p-4 bg-white border border-blue-100 rounded-[16px] text-sm font-bold outline-none h-16 shadow-inner" 
-                    placeholder="말하거나 입력하세요: 홍길동 01012345678 에어컨" oninput="window.fastKeywordParse()"></textarea>
+                    placeholder="말하거나 입력하세요: 홍길동 01012345678 냉장고" oninput="window.fastKeywordParse()"></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-3 pt-2">
@@ -213,8 +216,8 @@
     </div>
 
     <!-- 삭제 확인 모달 -->
-    <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6 transition-all">
-        <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl scale-in">
+    <div id="deleteModal" class="fixed inset-0 z-[260] bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-6">
+        <div class="bg-white w-full max-w-[320px] rounded-[32px] p-8 text-center shadow-2xl">
             <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-trash-can text-xl"></i></div>
             <h3 class="text-lg font-black text-slate-800 mb-6">기록을 완전히 삭제할까요?</h3>
             <div class="flex gap-3">
@@ -224,103 +227,99 @@
         </div>
     </div>
 
+    <!-- 스크립트 모듈: Firebase v11 연동 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ⚙️ 하이브리드 엔진 설정
-        let masterPIN = "7604";
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'park-crm-inline-v14';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        let db, auth, currentUser;
-        let isLocalMode = false;
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgEADFwdp77BNJN-raUvI_H7jOKRtIDM8",
+            authDomain: "park-41693.firebaseapp.com",
+            projectId: "park-41693",
+            storageBucket: "park-41693.firebasestorage.app",
+            messagingSenderId: "864597837268",
+            appId: "1:864597837268:web:4511defd1695faa6e54241",
+            measurementId: "G-TJRBS4XXHP"
+        };
+        const appId = 'park-crm-inline-v14';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
         let customers = [];
         let editingId = null;
         let currentCategory = '전체';
         let deletingId = null;
         let attachedPhoto = "";
+        let unsubscribeFirestore = null;
 
-        // [복구 명단] 기존 고객 10인 완전 고정
-        const seedData = [
-            { id: '01091075798', name: '박정권', phone: '010-9107-5798', category: '상담진행', product: '미지정', notes: '핵심 고객 관리\n결정 대기중', isUrgent: false, updatedAt: new Date().toISOString() },
-            { id: '01044168488', name: '조수진', phone: '010-4416-8488', category: '상담진행', product: '혼수 가전', notes: '박정근 담당 상담', isUrgent: false, updatedAt: new Date().toISOString() },
-            { id: '01045536113', name: '장성필', phone: '010-4553-6113', category: '상담진행', product: '냉장고', notes: '견적 요청', isUrgent: false, updatedAt: new Date().toISOString() },
-            { id: '01030914080', name: '최나임', phone: '010-3091-4080', category: '상담진행', product: '미지정', notes: '긴급 조율 건', isUrgent: true, updatedAt: new Date().toISOString() },
-            { id: '01029850955', name: '에어컨 신규', phone: '010-2985-0955', category: '미연락', product: '에어컨', notes: '오늘 연락 필수!', isUrgent: true, updatedAt: new Date().toISOString() },
-            { id: '01000000000', name: '박정근(담당)', phone: '010-0000-0000', category: '상담진행', product: '미지정', notes: '시스템 관리 카드', isUrgent: false, updatedAt: new Date().toISOString() }
-        ];
-
-        // 1. 하이브리드 부트스트랩
-        async function bootstrap() {
-            if(!firebaseConfig.apiKey) {
-                isLocalMode = true;
-                document.getElementById('sync-status').innerText = 'Local App';
-                const localData = localStorage.getItem('crm_pro_data');
-                if (localData) customers = JSON.parse(localData);
-                else { customers = [...seedData]; localStorage.setItem('crm_pro_data', JSON.stringify(customers)); }
-                window.render();
-                return;
-            }
-
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-                else await signInAnonymously(auth);
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        currentUser = user;
-                        document.getElementById('sync-status').innerText = 'Cloud Sync';
-                        const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
-                        onSnapshot(ref, (snapshot) => {
-                            if (snapshot.empty) recoverySeed();
-                            else {
-                                customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                window.render();
-                            }
-                        });
-                    }
-                });
-            } catch (e) {
-                isLocalMode = true;
-                customers = [...seedData];
-                window.render();
-            }
-        }
-        bootstrap();
-
-        async function recoverySeed() {
-            if (isLocalMode) return;
-            for (const item of seedData) {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', item.id), item, { merge: true });
-            }
-        }
-
-        // --- 전역 함수 바인딩 ---
-        window.checkPassword = function() {
-            if (document.getElementById('passwordInput').value === masterPIN) {
+        // 인증 상태 감시자 (자동 로그인 유지)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('main-app').classList.remove('hidden');
-                window.render();
+                
+                // Firestore 보안 규칙에 지정된 동일 경로 실시간 수신
+                const ref = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+                if (unsubscribeFirestore) unsubscribeFirestore();
+                unsubscribeFirestore = onSnapshot(ref, (snapshot) => {
+                    customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    window.render();
+                }, (error) => {
+                    console.error("Firestore 수신 오류:", error);
+                    alert("데이터베이스 권한 오류: Firestore 보안 규칙의 UID 설정을 다시 확인해주세요.");
+                });
             } else {
-                document.getElementById('password-error').classList.remove('hidden');
-                document.getElementById('passwordInput').value = "";
+                currentUser = null;
+                customers = [];
+                if (unsubscribeFirestore) unsubscribeFirestore();
+                document.getElementById('lock-screen').style.display = 'flex';
+                document.getElementById('main-app').classList.add('hidden');
+            }
+        });
+
+        // 1. 이메일 로그인 처리
+        window.loginCRM = async function() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errEl = document.getElementById('login-error');
+            const btn = document.getElementById('loginBtn');
+            
+            errEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerText = "접속 중...";
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (err) {
+                errEl.classList.remove('hidden');
+                errEl.innerText = "이메일 또는 비밀번호가 올바르지 않습니다.";
+                console.error("로그인 실패:", err);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "로그인";
             }
         };
 
+        // 2. 로그아웃
+        window.logoutCRM = async function() {
+            if (confirm("로그아웃 하시겠습니까?")) {
+                await signOut(auth);
+            }
+        };
+
+        // 3. 키워드 및 음성 자동 완성
         window.fastKeywordParse = function() {
             const input = document.getElementById('smartInput').value;
             const words = input.split(/\s+/);
             let name = "", phone = "", product = "미지정";
             const pMap = {
                 '티비': ['티비', 'TV', 'tv'], '냉장고': ['냉장고', '비스포크', '오브제'],
-                '에어컨': ['에어컨', '시스템에어컨'], '혼수': ['혼수', '이사', '전체'],
+                '에어컨': ['에어컨', '시스템에어컨'], '혼수 가전': ['혼수', '이사', '전체'],
                 '식기세척기': ['식세기', '식기세척기']
             };
             words.forEach(word => {
@@ -335,7 +334,9 @@
         };
 
         window.startVoiceRecognition = function() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) return alert("현재 브라우저는 음성 인식을 지원하지 않습니다.");
+            const recognition = new SpeechRec();
             recognition.lang = 'ko-KR';
             const btn = document.getElementById('mic-btn');
             recognition.onstart = () => { btn.classList.replace('bg-blue-600', 'bg-red-500'); btn.classList.add('animate-pulse'); };
@@ -348,6 +349,7 @@
             recognition.start();
         };
 
+        // 4. 사진 압축 처리
         window.handlePhotoSelect = function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -371,7 +373,7 @@
             reader.readAsDataURL(file);
         };
 
-        // [핵심] 인라인 메모 수정이 적용된 렌더링 엔진
+        // 5. 메인 리스트 렌더링
         window.render = function() {
             const container = document.getElementById('customerList');
             if (!container) return;
@@ -387,19 +389,19 @@
                            (currentCategory === '긴급' ? customers.filter(c => c.isUrgent === true) : 
                            customers.filter(c => c.category === currentCategory));
             
-            filtered = filtered.filter(c => (c.name || '').toLowerCase().includes(search) || (c.phone || '').includes(search));
+            filtered = filtered.filter(c => (c.name || '').toLowerCase().includes(search) || (c.phone || '').includes(search) || (c.product || '').includes(search));
 
             filtered.sort((a, b) => {
                 const aU = a.isUrgent === true ? 0 : 1;
                 const bU = b.isUrgent === true ? 0 : 1;
-                if (aU !== bU) return aU - bU; // 긴급 우선
+                if (aU !== bU) return aU - bU;
                 if (sortMode === 'product') return (a.product || '미지정').localeCompare(b.product || '미지정');
                 if (sortMode === 'name') return (a.name || '').localeCompare(b.name || '');
                 return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
             });
 
             document.getElementById('totalBadge').innerText = `${filtered.length} 명`;
-            container.innerHTML = filtered.length ? '' : '<div class="py-20 text-slate-300 font-bold text-sm text-center">기록이 없습니다.</div>';
+            container.innerHTML = filtered.length ? '' : '<div class="py-20 text-slate-300 font-bold text-sm text-center">등록된 고객이 없습니다.</div>';
 
             filtered.forEach(c => {
                 const isUrgent = c.isUrgent === true;
@@ -407,16 +409,15 @@
                 const dateHtml = c.scheduledDate ? `<span class="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-md font-black mr-2">${c.scheduledDate} 일정</span>` : '';
                 const imgHtml = c.photo ? `<img src="${c.photo}" class="card-photo" onclick="window.showFullImage('${c.photo}')">` : '';
 
-                // [추가] 인라인 메모 수정 textarea 적용 (onblur 트리거)
                 container.innerHTML += `
                     <div class="bg-white p-5 rounded-[32px] border ${isUrgent ? 'urgent-card' : 'border-slate-100'} shadow-sm transition-all">
                         <div class="flex justify-between items-center mb-3">
                             <div class="text-left flex-1 overflow-hidden">
                                 <h4 class="font-black text-slate-800 text-lg truncate flex items-center">
                                     ${isUrgent ? '<span class="urgent-tag">긴급</span>' : ''}
-                                    ${c.name || '익명'}
+                                    ${c.name || '고객명 미입력'}
                                 </h4>
-                                <p class="text-[11px] font-bold text-slate-300 font-mono tracking-tight">${c.phone || '번호없음'}</p>
+                                <p class="text-[11px] font-bold text-slate-400 font-mono tracking-tight">${c.phone || '연락처 없음'}</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="window.toggleUrgent('${c.id}')" class="w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-all ${isUrgent ? 'bg-red-500 text-white' : 'bg-slate-50 text-slate-300'} active-scale">
@@ -428,26 +429,24 @@
                         <div class="flex flex-wrap gap-1 mb-3 items-center text-[9px] font-black text-slate-400 uppercase">
                             ${dateHtml}
                             <span class="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600 font-bold">${c.product || '미지정'}</span>
-                            <span class="ml-auto"><i class="fa-solid fa-clock mr-1"></i> ${new Date(c.updatedAt).toLocaleDateString()}</span>
+                            <span class="ml-auto"><i class="fa-solid fa-clock mr-1"></i> ${c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : ''}</span>
                         </div>
                         ${imgHtml}
                         
-                        <!-- 💡 핵심: 카드 내에서 즉시 수정 가능한 인라인 메모장 -->
                         <div class="memo-box mb-4">
                             <textarea onblur="window.fastUpdate('${c.id}', 'notes', this.value)" 
                                 class="w-full text-sm font-semibold text-slate-600 leading-relaxed bg-transparent border-none outline-none resize-none placeholder-slate-300" 
-                                placeholder="이 곳을 터치하여 메모를 즉시 작성하세요..." rows="3">${c.notes || ''}</textarea>
+                                placeholder="터치하여 상담 메모를 즉시 수정하세요..." rows="3">${c.notes || ''}</textarea>
                         </div>
                         
                         <div class="flex gap-2">
                             <a href="tel:${c.phone}" class="flex-[3] h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline shadow-md active-scale"><i class="fa-solid fa-phone text-xs"></i> 통화</a>
                             <a href="sms:${c.phone}" class="flex-[3] h-11 bg-white border border-slate-200 text-slate-800 rounded-2xl flex items-center justify-center gap-2 font-black text-xs no-underline shadow-sm active-scale"><i class="fa-solid fa-message text-xs text-slate-400"></i> 문자</a>
                             
-                            <!-- 상세 정보(날짜, 사진 등) 수정 버튼 -->
-                            <button onclick="window.editCustomer('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center active-scale transition-all">
+                            <button onclick="window.editCustomer('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center active-scale">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
-                            <button onclick="window.requestDelete('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-200 rounded-xl flex items-center justify-center active-scale hover:text-red-500 transition-all">
+                            <button onclick="window.requestDelete('${c.id}')" class="flex-1 h-11 bg-slate-50 text-slate-300 rounded-xl flex items-center justify-center active-scale hover:text-red-500">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -456,7 +455,9 @@
             });
         };
 
+        // 6. 고객 저장 (신규/수정 Firestore Write)
         window.saveCustomer = async () => {
+            if (!currentUser) return alert("로그인이 필요합니다.");
             const name = document.getElementById('formName').value.trim();
             const phone = document.getElementById('formPhone').value.trim();
             const notes = document.getElementById('formNotes').value.trim();
@@ -465,10 +466,10 @@
 
             const cleanPhone = phone.replace(/[^0-9]/g, '');
             const finalPhone = cleanPhone.length === 8 ? '010' + cleanPhone : cleanPhone;
-            const docId = editingId || (finalPhone || 'usr-' + Date.now());
+            const docId = editingId || (finalPhone || 'c-' + Date.now());
             
             const payload = {
-                name: name || "익명고객",
+                name: name || "고객",
                 phone: finalPhone || "",
                 category: document.getElementById('formCategory').value,
                 product: document.getElementById('formProduct').value,
@@ -478,39 +479,19 @@
                 updatedAt: new Date().toISOString()
             };
 
-            if (isLocalMode) {
-                const idx = customers.findIndex(c => c.id === docId);
-                if (idx > -1) {
-                    payload.isUrgent = customers[idx].isUrgent || false;
-                    customers[idx] = { ...customers[idx], ...payload, id: docId };
-                } else {
-                    customers.push({ ...payload, id: docId, isUrgent: false });
-                }
-                localStorage.setItem('crm_pro_data', JSON.stringify(customers));
-                window.render();
-            } else if (currentUser) {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', docId);
-                await setDoc(docRef, payload, { merge: true });
-            }
-            window.closeModal(); window.showToast();
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', docId);
+            await setDoc(docRef, payload, { merge: true });
+            
+            window.closeModal(); 
+            window.showToast();
         };
 
-        // [인라인 업데이트 처리 함수]
+        // 7. 인라인 필드 실시간 업데이트
         window.fastUpdate = async (id, field, value) => {
-            if (isLocalMode) {
-                const idx = customers.findIndex(c => c.id === id);
-                if (idx > -1) {
-                    customers[idx][field] = value;
-                    customers[idx].updatedAt = new Date().toISOString();
-                    localStorage.setItem('crm_pro_data', JSON.stringify(customers));
-                    window.render();
-                }
-            } else if (currentUser) {
-                // UI 즉각 반영 (빠른 체감 속도)
-                const idx = customers.findIndex(c => c.id === id);
-                if (idx > -1) customers[idx][field] = value;
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), { [field]: value, updatedAt: new Date().toISOString() }, { merge: true });
-            }
+            if (!currentUser) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', id);
+            await setDoc(docRef, { [field]: value, updatedAt: new Date().toISOString() }, { merge: true });
+            window.showToast();
         };
 
         window.toggleUrgent = async (id) => {
@@ -522,45 +503,60 @@
         window.closeDeleteModal = () => { document.getElementById('deleteModal').classList.replace('flex', 'hidden'); deletingId = null; };
         
         document.getElementById('confirmDeleteBtn').onclick = async () => { 
-            if (!deletingId) return;
-            if (isLocalMode) {
-                customers = customers.filter(c => c.id !== deletingId);
-                localStorage.setItem('crm_pro_data', JSON.stringify(customers));
-                window.render();
-            } else if (currentUser) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', deletingId)); 
-            }
+            if (!deletingId || !currentUser) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', deletingId)); 
             window.closeDeleteModal(); 
         };
 
-        window.setCategory = (cat) => { currentCategory = cat; document.body.className = `pb-24 select-none theme-${cat}`; document.querySelectorAll('nav button').forEach(b => b.className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive'); document.getElementById(`tab-${cat}`).className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active'; window.render(); };
+        window.setCategory = (cat) => { 
+            currentCategory = cat; 
+            document.body.className = `pb-24 select-none theme-${cat}`; 
+            document.querySelectorAll('nav button').forEach(b => b.className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-inactive'); 
+            document.getElementById(`tab-${cat}`).className = 'flex-none px-5 py-4 text-xs tracking-tighter transition-all tab-active'; 
+            window.render(); 
+        };
         
         window.openModal = () => { 
             document.getElementById('modal').classList.replace('hidden', 'flex'); 
-            document.getElementById('smartInputContainer').style.display = editingId ? 'none' : 'block'; // 상세수정 시 음성입력창 숨김
+            document.getElementById('smartInputContainer').style.display = editingId ? 'none' : 'block';
         };
         
         window.closeModal = () => { 
             document.getElementById('modal').classList.replace('flex', 'hidden'); 
-            editingId = null; attachedPhoto = "";
+            editingId = null; 
+            attachedPhoto = "";
             ['formName', 'formPhone', 'formNotes', 'formScheduledDate', 'smartInput'].forEach(id => document.getElementById(id).value='');
             document.getElementById('photo-preview-img').style.display = 'none';
         };
 
         window.editCustomer = (id) => { 
-            const c = customers.find(c => c.id === id); if(!c) return; editingId = id; window.openModal(); 
+            const c = customers.find(c => c.id === id); 
+            if(!c) return; 
+            editingId = id; 
+            window.openModal(); 
             document.getElementById('formName').value = c.name || ''; 
             document.getElementById('formPhone').value = c.phone || ''; 
             document.getElementById('formProduct').value = c.product || '미지정'; 
             document.getElementById('formScheduledDate').value = c.scheduledDate || ''; 
             document.getElementById('formNotes').value = c.notes || ''; 
             document.getElementById('formCategory').value = c.category || '미연락';
-            if(c.photo) { attachedPhoto = c.photo; document.getElementById('photo-preview-img').src = c.photo; document.getElementById('photo-preview-img').style.display = 'block'; }
+            if(c.photo) { 
+                attachedPhoto = c.photo; 
+                document.getElementById('photo-preview-img').src = c.photo; 
+                document.getElementById('photo-preview-img').style.display = 'block'; 
+            }
         };
 
-        window.showToast = () => { const t = document.getElementById('save-toast'); t.style.display = 'block'; setTimeout(() => { t.style.display = 'none'; }, 2000); };
-        window.showFullImage = (src) => { const win = window.open(); win.document.write(`<img src="${src}" style="width:100%;height:auto;">`); };
+        window.showToast = () => { 
+            const t = document.getElementById('save-toast'); 
+            t.style.display = 'block'; 
+            setTimeout(() => { t.style.display = 'none'; }, 2000); 
+        };
 
+        window.showFullImage = (src) => { 
+            const win = window.open(); 
+            win.document.write(`<img src="${src}" style="width:100%;height:auto;">`); 
+        };
     </script>
 </body>
 </html>
